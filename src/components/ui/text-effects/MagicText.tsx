@@ -2,6 +2,7 @@
 
 import { useIsClient } from '@/hooks/useIsClient';
 import { rand } from '@/utils/math';
+import { Box } from 'lucide-react';
 import { CSSProperties, useState } from 'react';
 
 interface MagicTextProps {
@@ -13,12 +14,6 @@ const getRandomPosition = (): CSSProperties => ({
   top: `${rand(-40, 80)}%`,
   rotate: `${rand(0, 360)}deg`,
 });
-
-const iconMapping = {
-  0: '❄️',
-  1: '🎁',
-  2: '✨',
-} as const;
 
 export function MagicText({ text }: MagicTextProps) {
   const [iconPositions, setIconPositions] = useState<CSSProperties[]>(() =>
@@ -46,12 +41,12 @@ export function MagicText({ text }: MagicTextProps) {
             className="animate-scale absolute flex items-center"
             style={position}
             onAnimationIteration={() => handleIconAnimationEnd(index)}>
-            <span className="animate-rotate flex items-center not-italic opacity-70">
-              {iconMapping[index as keyof typeof iconMapping]}
+            <span className="animate-rotate flex items-center not-italic opacity-80">
+              <Box size={32} />
             </span>
           </span>
         ))}
-      <span className="animate-background-pan bg-linear-to-r from-red-600 via-green-600 to-red-600 bg-size-[200%] bg-clip-text whitespace-nowrap text-transparent">
+      <span className="animate-background-pan via-card-foreground from-primary to-primary bg-linear-to-r bg-size-[200%] bg-clip-text whitespace-nowrap text-transparent">
         {text}
       </span>
     </span>
