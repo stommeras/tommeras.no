@@ -31,9 +31,9 @@ const { command } = Astro.props;
     display: none;
   }
 
-  /* .typing-now shows the cursor while a command is being typed */
+  /* .current shows the cursor on the prompt that waits for or types its command */
   .idle .cursor,
-  :global(.typing-now) .cursor {
+  :global(.current) .cursor {
     display: inline-block;
     width: 0.55em;
     height: 1.1em;

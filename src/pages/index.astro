@@ -109,7 +109,7 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <script>
-  // Each command types out when it scrolls into view, then its output appears. Any key or click skips to the end.
+  // Each command types out when its prompt scrolls into view, then its output appears. Any key or click skips to the end.
   const root = document.documentElement;
   if (root.classList.contains('typing')) {
     const main = document.querySelector('main')!;
@@ -153,22 +153,37 @@ import Layout from '../layouts/Layout.astro';
       }
     }
 
-    async function run({ prompt, output }: Step) {
-      if (skipped) return;
+    // The next prompt waits with a blinking cursor; its command runs once it scrolls into view
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.unobserve(entry.target);
+        run(steps.findIndex((step) => step.prompt === entry.target));
+      },
+      { rootMargin: '0px 0px -15% 0px' },
+    );
+
+    function wait({ prompt }: Step) {
       show(prompt);
-      const cmd = prompt.querySelector<HTMLElement>('.cmd');
-      if (!cmd) return;
-      prompt.classList.add('typing-now');
+      prompt.classList.add('current');
+      if (prompt.querySelector('.cmd')) observer.observe(prompt);
+    }
+
+    async function run(index: number) {
+      const { prompt, output } = steps[index];
+      const cmd = prompt.querySelector<HTMLElement>('.cmd')!;
       await sleep(350);
       await type(cmd, cmd.dataset.text!, 60);
       await sleep(250);
-      prompt.classList.remove('typing-now');
+      if (skipped) return;
+      prompt.classList.remove('current');
       for (const el of output) {
         if (skipped) return;
         show(el);
         if (el === about) await type(typed, aboutText, 12, rest);
       }
       await sleep(250);
+      if (!skipped) wait(steps[index + 1]);
     }
 
     function skip() {
@@ -178,27 +193,14 @@ import Layout from '../layouts/Layout.astro';
       for (const cmd of commands) cmd.textContent = cmd.dataset.text!;
       typed.textContent = aboutText;
       rest.textContent = '';
-      for (const el of main.querySelectorAll('.typing-now')) el.classList.remove('typing-now');
+      observer.disconnect();
+      for (const el of main.querySelectorAll('.current')) el.classList.remove('current');
       dispatchEvent(new Event('hei'));
     }
 
     for (const event of ['keydown', 'click']) addEventListener(event, skip, { once: true });
 
-    // A queue keeps the steps in page order when several scroll into view at once
-    let queue = Promise.resolve();
-    const byPrompt = new Map(steps.map((step) => [step.prompt, step]));
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          observer.unobserve(entry.target);
-          const step = byPrompt.get(entry.target as HTMLElement)!;
-          queue = queue.then(() => run(step));
-        }
-      },
-      { rootMargin: '0px 0px -15% 0px' },
-    );
-    for (const step of steps) observer.observe(step.prompt);
+    wait(steps[0]);
   }
 </script>
 
