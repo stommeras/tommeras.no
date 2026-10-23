@@ -7,7 +7,7 @@ import Layout from '../../layouts/Layout.astro';
 <Layout title="Proof | Tømmerås" description="Proof er en cocktaillogg med versjonshistorikk inspirert av git.">
   <Window path="~/prosjekter/proof" file="README.md">
     <Prompt path="~/prosjekter/proof" command="cat README.md" />
-    <h1>
+    <h1 class="title">
       <span aria-hidden="true"># </span>Proof
     </h1>
     <p>
@@ -45,8 +45,8 @@ import Layout from '../../layouts/Layout.astro';
         <span aria-hidden="true">## </span>Valg underveis
       </h2>
       <p>
-        Proof er bygget sammen med Claude Code, og beslutningene under er skrevet ned som ADR-er agenten må forholde seg
-        til.
+        Proof er bygget sammen med Claude Code, og de viktigste beslutningene er skrevet ned som ADR-er agenten må
+        forholde seg til. Her er tre eksempler.
       </p>
 
       <h3>
@@ -58,19 +58,21 @@ import Layout from '../../layouts/Layout.astro';
       </p>
 
       <h3>
-        En publisert oppskrift er frosset <span class="adr">ADR 0013</span>
+        Bare den ytterste versjonen kan slettes <span class="adr">ADR 0004</span>
       </h3>
       <p>
-        Bildet og beskrivelsen kan endres, men ikke selve oppskriften. Ellers kunne likes en Negroni har fått, havne
-        under en helt annen drink.
+        Endringene i en versjon regnes ut fra versjonen og forelderen dens. Slettes en versjon midt i en kjede, blir
+        4&nbsp;cl → 5&nbsp;cl → 6&nbsp;cl gin til 4&nbsp;cl → 6&nbsp;cl, en endring ingen gjorde. Derfor kan bare en
+        versjon uten etterkommere slettes.
       </p>
 
       <h3>
-        Demoen er et eget bygg <span class="adr">ADR 0025</span>
+        Ingen abstraksjon rundt Supabase <span class="adr">ADR 0001</span>
       </h3>
       <p>
-        I demomodus bytter Vite ut hver datamodul med en som bruker <code>sessionStorage</code>. Supabase-klienten når
-        aldri demoens bundle, så demoen kan ikke snakke med den ekte databasen.
+        Datamodulene kaller Supabase direkte, uten et grensesnitt imellom. En falsk database svarer ja der den ekte sier
+        nei, for eksempel når RLS avviser en rad eller en GRANT mangler. Derfor kjører testene mot en ekte lokal
+        Postgres.
       </p>
     </section>
 
@@ -87,12 +89,6 @@ import Layout from '../../layouts/Layout.astro';
 </Layout>
 
 <style>
-  h1 {
-    margin: 12px 0 0;
-    font-size: 1.75rem;
-    color: var(--pink);
-  }
-
   h3 {
     margin: 32px 0 0;
     font-size: 1.0625rem;
