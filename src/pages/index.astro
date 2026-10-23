@@ -182,7 +182,7 @@ import Layout from '../layouts/Layout.astro';
       dispatchEvent(new Event('hei'));
     }
 
-    for (const event of ['keydown', 'pointerdown']) addEventListener(event, skip, { once: true });
+    for (const event of ['keydown', 'click']) addEventListener(event, skip, { once: true });
 
     // A queue keeps the steps in page order when several scroll into view at once
     let queue = Promise.resolve();
