@@ -1,13 +1,14 @@
 ---
 interface Props {
   command?: string;
+  path?: string;
 }
 
-const { command } = Astro.props;
+const { command, path = '~' } = Astro.props;
 ---
 
 <p class="prompt" class:list={{ idle: !command }} aria-hidden="true">
-  <span class="path">~</span> <span class="arrow">❯</span> {command && <span class="cmd">{command}</span>}
+  <span class="path">{path}</span> <span class="arrow">❯</span> {command && <span class="cmd">{command}</span>}
   <span class="cursor" />
 </p>
 

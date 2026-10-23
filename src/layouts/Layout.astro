@@ -4,9 +4,10 @@ import { Font } from 'astro:assets';
 
 interface Props {
   title?: string;
+  description?: string;
 }
 
-const { title = 'Tømmerås' } = Astro.props;
+const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tømmerås.' } = Astro.props;
 ---
 
 <!doctype html>
@@ -14,7 +15,7 @@ const { title = 'Tømmerås' } = Astro.props;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Personlig nettside for Steffen Tømmerås." />
+    <meta name="description" content={description} />
     <link rel="icon" href="/favicon.ico" />
     <Font cssVariable="--font-mono" preload={[{ style: 'normal' }, { weight: 400, style: 'italic' }]} />
     <title>{title}</title>

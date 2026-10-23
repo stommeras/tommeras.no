@@ -1,0 +1,136 @@
+---
+import Prompt from '../../components/Prompt.astro';
+import Window from '../../components/Window.astro';
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Proof | Tømmerås" description="Proof er en cocktaillogg med versjonshistorikk inspirert av git.">
+  <Window path="~/prosjekter/proof" file="README.md">
+    <Prompt path="~/prosjekter/proof" command="cat README.md" />
+    <h1>
+      <span aria-hidden="true"># </span>Proof
+    </h1>
+    <p>
+      En cocktaillogg med versjonshistorikk inspirert av git. Hver versjon av en oppskrift er en commit med
+      ingredienser, metode, garnityr og hva du syntes om drinken. Du kan lage en branch av en oppskrift eller flytte
+      HEAD tilbake til en eldre versjon uten at noe du har skrevet blir overskrevet.
+    </p>
+    <img
+      src="/prosjekter/proof.png"
+      width="1200"
+      height="630"
+      loading="lazy"
+      alt="Versjonstreet til en Espresso Martini i Proof: fire versjoner og én branch, med versjon 2a markert som den du lager nå."
+    />
+    <p>
+      <a href="https://demo.proof.tommeras.no">Prøv demoen</a>{' '}
+      <span class="target" aria-hidden="true">
+        -> demo.proof.tommeras.no
+      </span>
+    </p>
+    <p>
+      Selve appen på proof.tommeras.no deles mellom noen få inviterte. Demoen åpner en oppdiktet bar, og ingenting du
+      endrer forlater fanen.
+    </p>
+
+    <section>
+      <h2>
+        <span aria-hidden="true">## </span>Teknologi
+      </h2>
+      <p>SvelteKit · TypeScript · Supabase (Postgres, RLS, Storage) · Vercel</p>
+    </section>
+
+    <section>
+      <h2>
+        <span aria-hidden="true">## </span>Valg underveis
+      </h2>
+      <p>
+        Proof er bygget sammen med Claude Code, og beslutningene under er skrevet ned som ADR-er agenten må forholde seg
+        til.
+      </p>
+
+      <h3>
+        Versjoner endres aldri <span class="adr">ADR 0017</span>
+      </h3>
+      <p>
+        En versjon skrives aldri om, heller ikke for å rette en skrivefeil. Kunne den det, ville historikken bare vise
+        hva du mener nå, ikke hva som faktisk skjedde.
+      </p>
+
+      <h3>
+        En publisert oppskrift er frosset <span class="adr">ADR 0013</span>
+      </h3>
+      <p>
+        Bildet og beskrivelsen kan endres, men ikke selve oppskriften. Ellers kunne likes en Negroni har fått, havne
+        under en helt annen drink.
+      </p>
+
+      <h3>
+        Demoen er et eget bygg <span class="adr">ADR 0025</span>
+      </h3>
+      <p>
+        I demomodus bytter Vite ut hver datamodul med en som bruker <code>sessionStorage</code>. Supabase-klienten når
+        aldri demoens bundle, så demoen kan ikke snakke med den ekte databasen.
+      </p>
+    </section>
+
+    <p class="back">
+      <span class="path" aria-hidden="true">
+        ~/prosjekter/proof
+      </span>{' '}
+      <span class="arrow" aria-hidden="true">
+        ❯
+      </span>{' '}
+      <a href="/">cd ~</a>
+    </p>
+  </Window>
+</Layout>
+
+<style>
+  h1 {
+    margin: 12px 0 0;
+    font-size: 1.75rem;
+    color: var(--pink);
+  }
+
+  h3 {
+    margin: 32px 0 0;
+    font-size: 1.0625rem;
+  }
+
+  p {
+    max-width: 64ch;
+    margin: 12px 0 0;
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-top: 24px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+
+  .adr,
+  .target {
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .back {
+    margin-top: 56px;
+    color: var(--muted);
+    font-size: 0.9375rem;
+  }
+
+  .path {
+    color: var(--lavender);
+  }
+
+  .arrow {
+    color: var(--mint);
+  }
+</style>
