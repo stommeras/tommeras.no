@@ -1,0 +1,139 @@
+---
+const title = 'TØMMERÅS';
+---
+
+<header class="hero">
+  <h1 aria-label={title}>
+    <span aria-hidden="true" data-value={title}>
+      {title}
+    </span>
+  </h1>
+  <p class="subtitle">
+    En av{' '}
+    <span class="magic">
+      {[0, 1, 2].map(() => (
+        <span class="star" aria-hidden="true">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12.983 21.186a1 1 0 0 1-1.966 0 10 10 0 0 0-8.203-8.203 1 1 0 0 1 0-1.966 10 10 0 0 0 8.203-8.203 1 1 0 0 1 1.966 0 10 10 0 0 0 8.203 8.203 1 1 0 0 1 0 1.966 10 10 0 0 0-8.203 8.203" />
+          </svg>
+        </span>
+      ))}
+      <span class="magic-text">nettsidene</span>
+    </span>{' '}
+    gjennom tidene.
+  </p>
+</header>
+
+<script>
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ';
+  const h1 = document.querySelector<HTMLElement>('.hero h1')!;
+  const target = h1.querySelector<HTMLElement>('[data-value]')!;
+  const value = target.dataset.value!;
+  let interval: number | undefined;
+
+  function scramble() {
+    if (reducedMotion) return;
+    let iteration = 0;
+    clearInterval(interval);
+    interval = setInterval(() => {
+      target.textContent = [...value]
+        .map((letter, index) => (index < iteration ? letter : letters[Math.floor(Math.random() * letters.length)]))
+        .join('');
+      if (iteration >= value.length) clearInterval(interval);
+      iteration += 1 / 3;
+    }, 30);
+  }
+
+  h1.addEventListener('pointerenter', scramble);
+  scramble();
+
+  const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+  for (const [i, star] of document.querySelectorAll<HTMLElement>('.hero .star').entries()) {
+    const move = () => {
+      star.style.left = `${rand(-10, 100)}%`;
+      star.style.top = `${rand(-40, 80)}%`;
+      star.style.rotate = `${rand(0, 360)}deg`;
+    };
+    move();
+    star.addEventListener('animationiteration', move);
+    star.style.animationDelay = `calc(var(--pulse) * ${i} / 3)`;
+  }
+</script>
+
+<style>
+  .hero {
+    overflow-x: clip;
+    font-style: italic;
+    text-align: center;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(2.25rem, 8vw, 3.75rem);
+    font-weight: 400;
+  }
+
+  .subtitle {
+    margin: 0.5em 0 0;
+    font-size: clamp(1.5rem, 5vw, 2.25rem);
+  }
+
+  .magic {
+    --pulse: 2s;
+    position: relative;
+    display: inline-block;
+  }
+
+  .magic-text {
+    background: linear-gradient(to right, var(--primary), var(--fg), var(--primary)) 0 / 200%;
+    background-clip: text;
+    color: transparent;
+    white-space: nowrap;
+    animation: background-pan 6s linear infinite;
+  }
+
+  .star {
+    position: absolute;
+    display: flex;
+    opacity: 0.8;
+    animation: twinkle var(--pulse) ease infinite;
+  }
+
+  @keyframes background-pan {
+    to {
+      background-position: -200% center;
+    }
+  }
+
+  @keyframes twinkle {
+    from {
+      transform: scale(0) rotate(0deg);
+    }
+    50% {
+      transform: scale(1) rotate(90deg);
+    }
+    to {
+      transform: scale(0) rotate(180deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .magic-text {
+      animation: none;
+    }
+    .star {
+      display: none;
+    }
+  }
+</style>

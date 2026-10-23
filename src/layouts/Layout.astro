@@ -1,0 +1,64 @@
+---
+import Analytics from '@vercel/analytics/astro';
+import { Font } from 'astro:assets';
+
+interface Props {
+  title?: string;
+}
+
+const { title = 'Tømmerås' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="nb">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Personlig nettside for Steffen Tømmerås." />
+    <link rel="icon" href="/favicon.ico" />
+    <Font cssVariable="--font-mono" preload />
+    <title>{title}</title>
+    <Analytics />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<script>
+  console.log(`
+╔══════════════════════════════════════════════╗
+║                                              ║
+║             Velkommen, utvikler!             ║
+║                                              ║
+║      Nettsiden er designet og laget av       ║
+║               Steffen Tømmerås               ║
+║                                              ║
+║              Se kildekoden på:               ║
+║       github.com/stommeras/tommeras.no       ║
+║                                              ║
+╚══════════════════════════════════════════════╝
+`);
+</script>
+
+<style is:global>
+  :root {
+    color-scheme: light dark;
+    --bg: light-dark(oklch(1 0 0), oklch(0.205 0 0));
+    --fg: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
+    --primary: light-dark(oklch(0.59 0.26 323), oklch(0.67 0.26 322));
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-mono);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a {
+    color: var(--primary);
+  }
+</style>
