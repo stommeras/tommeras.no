@@ -149,6 +149,23 @@ const title = 'TØMMERÅS';
     }
   }
 
+  /* When ./hei.sh runs, the title fades in under the scramble, and the subtitle follows as the
+     scramble settles (about 700 ms). Only during the typed sequence, which reduced motion turns off. */
+  :global(html.typing) .hero:global(.shown) h1 {
+    animation: hero-in 300ms ease-out both;
+  }
+
+  :global(html.typing) .hero:global(.shown) .subtitle {
+    animation: hero-in 500ms ease-out 600ms both;
+  }
+
+  @keyframes hero-in {
+    from {
+      opacity: 0;
+      translate: 0 0.3em;
+    }
+  }
+
   @media (max-width: 600px) {
     .hero {
       padding: 40px 0 64px;
