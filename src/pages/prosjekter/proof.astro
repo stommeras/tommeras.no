@@ -70,12 +70,12 @@ const path = '~/prosjekter/proof';
       </p>
 
       <h3>
-        Ingen abstraksjon rundt Supabase <span class="adr">ADR 0001</span>
+        Treet tegnes ikke om når du bytter versjon <span class="adr">ADR 0007</span>
       </h3>
       <p>
-        Datamodulene kaller Supabase direkte, uten et grensesnitt imellom. En falsk database svarer ja der den ekte sier
-        nei, for eksempel når RLS avviser en rad eller en GRANT mangler. Derfor kjører ende-til-ende-testene mot en ekte
-        lokal Postgres.
+        Hovedlinjen i versjonstreet følger det første barnet ved hver forgrening, ikke HEAD. Når du gjør en annen
+        versjon til den du lager nå, flytter bare markøren seg, og resten av treet blir stående. Ellers ville hele
+        bildet stokket seg om akkurat når du ser på det for å forstå hva som endret seg.
       </p>
     </section>
 
