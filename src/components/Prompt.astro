@@ -1,0 +1,48 @@
+---
+interface Props {
+  command?: string;
+}
+
+const { command } = Astro.props;
+---
+
+<p class="prompt" aria-hidden="true">
+  <span class="path">~</span> <span class="arrow">❯</span> {command ?? <span class="cursor" />}
+</p>
+
+<style>
+  .prompt {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9375rem;
+  }
+
+  .path {
+    color: var(--lavender);
+  }
+
+  .arrow {
+    color: var(--mint);
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 0.55em;
+    height: 1.1em;
+    vertical-align: -0.2em;
+    background: var(--mint);
+    animation: blink 1s steps(1) infinite;
+  }
+
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cursor {
+      animation: none;
+    }
+  }
+</style>

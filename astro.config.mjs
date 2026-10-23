@@ -5,9 +5,9 @@ export default defineConfig({
   fonts: [
     {
       provider: fontProviders.fontsource(),
-      name: 'Cascadia Code',
+      name: 'JetBrains Mono',
       cssVariable: '--font-mono',
-      weights: [400],
+      weights: [400, 700, 800],
       styles: ['normal', 'italic'],
       subsets: ['latin'],
       fallbacks: ['monospace'],

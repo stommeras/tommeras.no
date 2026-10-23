@@ -16,7 +16,7 @@ const { title = 'Tømmerås' } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Personlig nettside for Steffen Tømmerås." />
     <link rel="icon" href="/favicon.ico" />
-    <Font cssVariable="--font-mono" preload />
+    <Font cssVariable="--font-mono" preload={[{ style: 'normal' }, { weight: 400, style: 'italic' }]} />
     <title>{title}</title>
     <Analytics />
   </head>
@@ -44,21 +44,43 @@ const { title = 'Tømmerås' } = Astro.props;
 <style is:global>
   :root {
     color-scheme: light dark;
-    --bg: light-dark(oklch(1 0 0), oklch(0.205 0 0));
-    --fg: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
-    --primary: light-dark(oklch(0.59 0.26 323), oklch(0.67 0.26 322));
+    --bg: light-dark(#eeeaf4, #16151d);
+    --surface: light-dark(#fbfafd, #1e1c27);
+    --chrome: light-dark(#e4dfee, #26232f);
+    --line: light-dark(#d6d0e3, #34303f);
+    --fg: light-dark(#2a2638, #e6e2f0);
+    --muted: light-dark(#625c78, #a39db8);
+    --pink: light-dark(#b5487a, #f2a7c3);
+    --lavender: light-dark(#6a51c9, #bba8f5);
+    --mint: light-dark(#2c7a5d, #9edbbf);
+    --peach: light-dark(#a2561c, #f3c29a);
+    --shadow: rgb(40 30 70 / 0.35);
   }
 
   body {
     margin: 0;
-    background: var(--bg);
+    background: var(--bg) radial-gradient(var(--line) 1px, transparent 1px) 0 0 / 24px 24px;
     color: var(--fg);
     font-family: var(--font-mono);
-    line-height: 1.5;
+    font-size: 1.0625rem;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
 
   a {
-    color: var(--primary);
+    color: var(--fg);
+    text-decoration: underline 2px var(--pink);
+    text-underline-offset: 4px;
+  }
+
+  a:hover {
+    color: var(--pink);
+  }
+
+  @media (max-width: 600px) {
+    body {
+      background-image: none;
+      font-size: 0.9375rem;
+    }
   }
 </style>
