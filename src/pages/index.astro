@@ -1,5 +1,6 @@
 ---
 import Hero from '../components/Hero.astro';
+import Prompt from '../components/Prompt.astro';
 import Layout from '../layouts/Layout.astro';
 ---
 
@@ -15,28 +16,22 @@ import Layout from '../layouts/Layout.astro';
       <span class="bar-right">zsh</span>
     </div>
     <main>
-      <p class="cmd" aria-hidden="true">
-        <span class="prompt-path">~</span> <span class="prompt-arrow">❯</span> ./hei.sh
-      </p>
+      <Prompt command="./hei.sh" />
       <Hero />
 
       <section>
-        <p class="cmd" aria-hidden="true">
-          <span class="prompt-path">~</span> <span class="prompt-arrow">❯</span> cat om-meg.md
-        </p>
+        <Prompt command="cat om-meg.md" />
         <h2>
           <span aria-hidden="true"># </span>Om meg
         </h2>
-        <p class="text">
+        <p class="about">
           Hei, jeg heter Steffen Tømmerås og jobber som frontendutvikler hos Kredinor. Jeg liker å teste nye verktøy og
           måter å jobbe på, og for tiden er det mest AI. Denne siden er for eksempel skrevet om sammen med Claude Code.
         </p>
       </section>
 
       <section>
-        <p class="cmd" aria-hidden="true">
-          <span class="prompt-path">~</span> <span class="prompt-arrow">❯</span> ls -l kontakt/
-        </p>
+        <Prompt command="ls -l kontakt/" />
         <h2 class="visually-hidden">Kontakt</h2>
         <ul>
           <li>
@@ -90,15 +85,13 @@ import Layout from '../layouts/Layout.astro';
       </section>
 
       <section>
-        <p class="cmd" aria-hidden="true">
-          <span class="prompt-path">~</span> <span class="prompt-arrow">❯</span> ls prosjekter/
-        </p>
+        <Prompt command="ls prosjekter/" />
         <p class="err">ls: prosjekter/: Ingen slik fil eller mappe (ennå)</p>
       </section>
 
-      <p class="cmd prompt-end" aria-hidden="true">
-        <span class="prompt-path">~</span> <span class="prompt-arrow">❯</span> <span class="cursor"></span>
-      </p>
+      <div class="prompt-end">
+        <Prompt />
+      </div>
     </main>
     <div class="status" aria-hidden="true">
       <span class="mode">NORMAL</span>
@@ -112,13 +105,9 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <style>
-  :global(body) {
-    padding: 72px 64px;
-  }
-
   .window {
-    max-width: 1040px;
-    margin: 0 auto;
+    width: min(1040px, 100% - 128px);
+    margin: 72px auto;
     overflow: hidden;
     background: var(--surface);
     border: 1px solid var(--line);
@@ -128,7 +117,7 @@ import Layout from '../layouts/Layout.astro';
 
   .bar,
   .status {
-    background: var(--surface-2);
+    background: var(--chrome);
     color: var(--muted);
     font-size: 0.8125rem;
   }
@@ -170,20 +159,6 @@ import Layout from '../layouts/Layout.astro';
     padding: 56px 64px 72px;
   }
 
-  .cmd {
-    margin: 0;
-    color: var(--muted);
-    font-size: 0.9375rem;
-  }
-
-  .prompt-path {
-    color: var(--lav);
-  }
-
-  .prompt-arrow {
-    color: var(--mint);
-  }
-
   section {
     margin-top: 56px;
   }
@@ -192,10 +167,10 @@ import Layout from '../layouts/Layout.astro';
     margin: 12px 0 0;
     font-size: 1.375rem;
     font-weight: 700;
-    color: var(--lav);
+    color: var(--lavender);
   }
 
-  .text {
+  .about {
     max-width: 64ch;
     margin: 12px 0 0;
   }
@@ -220,6 +195,7 @@ import Layout from '../layouts/Layout.astro';
     width: 1px;
     height: 1px;
     overflow: hidden;
+    margin: -1px;
     clip-path: inset(50%);
     white-space: nowrap;
   }
@@ -246,15 +222,6 @@ import Layout from '../layouts/Layout.astro';
     margin-top: 56px;
   }
 
-  .cursor {
-    display: inline-block;
-    width: 0.55em;
-    height: 1.1em;
-    vertical-align: -0.2em;
-    background: var(--mint);
-    animation: blink 1s steps(1) infinite;
-  }
-
   .status {
     display: flex;
     border-top: 1px solid var(--line);
@@ -272,20 +239,13 @@ import Layout from '../layouts/Layout.astro';
 
   .status .spacer {
     flex: 1;
-  }
-
-  @keyframes blink {
-    50% {
-      opacity: 0;
-    }
+    padding: 0;
   }
 
   @media (max-width: 600px) {
-    :global(body) {
-      padding: 0;
-    }
-
     .window {
+      width: auto;
+      margin: 0;
       border: 0;
       border-radius: 0;
       box-shadow: none;
@@ -304,12 +264,6 @@ import Layout from '../layouts/Layout.astro';
 
     section {
       margin-top: 44px;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .cursor {
-      animation: none;
     }
   }
 </style>

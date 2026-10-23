@@ -16,7 +16,7 @@ const { title = 'Tømmerås' } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Personlig nettside for Steffen Tømmerås." />
     <link rel="icon" href="/favicon.ico" />
-    <Font cssVariable="--font-mono" preload />
+    <Font cssVariable="--font-mono" preload={[{ style: 'normal' }, { weight: 400, style: 'italic' }]} />
     <title>{title}</title>
     <Analytics />
   </head>
@@ -46,12 +46,12 @@ const { title = 'Tømmerås' } = Astro.props;
     color-scheme: light dark;
     --bg: light-dark(#eeeaf4, #16151d);
     --surface: light-dark(#fbfafd, #1e1c27);
-    --surface-2: light-dark(#e4dfee, #26232f);
+    --chrome: light-dark(#e4dfee, #26232f);
     --line: light-dark(#d6d0e3, #34303f);
     --fg: light-dark(#2a2638, #e6e2f0);
     --muted: light-dark(#625c78, #a39db8);
     --pink: light-dark(#b5487a, #f2a7c3);
-    --lav: light-dark(#6a51c9, #bba8f5);
+    --lavender: light-dark(#6a51c9, #bba8f5);
     --mint: light-dark(#2c7a5d, #9edbbf);
     --peach: light-dark(#a2561c, #f3c29a);
     --shadow: rgb(40 30 70 / 0.35);
