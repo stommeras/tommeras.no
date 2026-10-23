@@ -63,19 +63,15 @@ const path = '~/prosjekter/proof';
         Bare den ytterste versjonen kan slettes <span class="adr">ADR 0004</span>
       </h3>
       <p>
-        Endringene i en versjon regnes ut fra versjonen og forelderen dens. Slettes en versjon midt i en kjede, blir
-        4&nbsp;cl → 5&nbsp;cl → 6&nbsp;cl gin til 4&nbsp;cl → 6&nbsp;cl, en endring ingen gjorde. Å slette hele grenen
-        under i stedet ville latt én bekreftelse fjerne ni versjoner. Derfor kan bare en versjon uten etterkommere
-        slettes.
+        Du kan bare slette en versjon som ikke har noen etter seg. Slettes 5&nbsp;cl i kjeden 4 → 5 → 6&nbsp;cl gin, ser
+        det ut som du gikk rett fra 4 til 6.
       </p>
 
       <h3>
         Treet tegnes ikke om når du bytter versjon <span class="adr">ADR 0007</span>
       </h3>
       <p>
-        Hovedlinjen i versjonstreet følger det første barnet ved hver forgrening, ikke HEAD. Når du gjør en annen
-        versjon til den du lager nå, flytter bare markøren seg, og resten av treet blir stående. Ellers ville hele
-        bildet stokket seg om akkurat når du ser på det for å forstå hva som endret seg.
+        Bytter du hvilken versjon du lager, flytter bare markøren seg. Treet står stille, så du ser hva som endret seg.
       </p>
     </section>
 
