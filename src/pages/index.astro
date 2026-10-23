@@ -195,7 +195,9 @@ import Layout from '../layouts/Layout.astro';
         show(el);
         if (el === about) await type(typed, aboutText, aboutCharMs, rest);
         // Let entrance animations (the hero's) finish first; looping ones like the stars never would
-        const entrances = el.getAnimations({ subtree: true }).filter((a) => a.effect?.getTiming().iterations !== Infinity);
+        const entrances = el
+          .getAnimations({ subtree: true })
+          .filter((a) => a.effect?.getTiming().iterations !== Infinity);
         await Promise.all(entrances.map((a) => a.finished.catch(() => {})));
       }
       await sleep(stepPauseMs);
