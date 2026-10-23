@@ -6,8 +6,10 @@ interface Props {
 const { command } = Astro.props;
 ---
 
-<p class="prompt" aria-hidden="true">
-  <span class="path">~</span> <span class="arrow">❯</span> {command ?? <span class="cursor" />}
+<p class="prompt" class:list={{ idle: !command }} aria-hidden="true">
+  <span class="path">~</span> <span class="arrow">❯</span> {command && <span class="cmd">{command}</span>}<span
+    class="cursor"
+  />
 </p>
 
 <style>
@@ -26,6 +28,12 @@ const { command } = Astro.props;
   }
 
   .cursor {
+    display: none;
+  }
+
+  /* .current shows the cursor on the prompt that waits for or types its command */
+  .idle .cursor,
+  :global(.current) .cursor {
     display: inline-block;
     width: 0.55em;
     height: 1.1em;

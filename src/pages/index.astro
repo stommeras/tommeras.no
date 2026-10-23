@@ -5,6 +5,17 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout>
+  <!-- Hides the content before first paint, so the commands can type out one by one -->
+  <script is:inline>
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const root = document.documentElement;
+      root.classList.add('typing');
+      // A restored scroll position would leave ./hei.sh off-screen, and nothing would start
+      history.scrollRestoration = 'manual';
+      // If the sequence script fails to load or throws during setup, show the page anyway
+      setTimeout(() => root.classList.contains('typing-started') || root.classList.remove('typing'), 3000);
+    }
+  </script>
   <div class="window">
     <div class="bar" aria-hidden="true">
       <span class="dots">
@@ -86,7 +97,7 @@ import Layout from '../layouts/Layout.astro';
 
       <section>
         <Prompt command="ls prosjekter/" />
-        <p class="err">ls: prosjekter/: Ingen slik fil eller mappe (ennå)</p>
+        <p class="err">ls: klarte ikke å åpne 'prosjekter/': Ingen slik fil eller filkatalog (ennå)</p>
       </section>
 
       <div class="prompt-end">
@@ -104,9 +115,144 @@ import Layout from '../layouts/Layout.astro';
   </div>
 </Layout>
 
+<script>
+  // Each command types out when its prompt scrolls into view, then its output appears. Any key or click skips to the end.
+  const root = document.documentElement;
+  if (root.classList.contains('typing')) {
+    const main = document.querySelector('main')!;
+    const hero = main.querySelector('.hero')!;
+    const about = main.querySelector<HTMLElement>('.about')!;
+    let skipped = false;
+
+    type Step = { prompt: HTMLElement; output: Element[] };
+    const steps: Step[] = [{ prompt: main.querySelector(':scope > .prompt')!, output: [hero] }];
+    for (const section of main.querySelectorAll('section')) {
+      const [prompt, ...output] = section.children;
+      steps.push({ prompt: prompt as HTMLElement, output });
+    }
+    steps.push({ prompt: main.querySelector('.prompt-end .prompt')!, output: [] });
+
+    const commands = [...main.querySelectorAll<HTMLElement>('.cmd')];
+
+    // Typed text plus a transparent remainder, so line breaks are fixed from the start
+    const aboutText = about.textContent!.replace(/\s+/g, ' ').trim();
+    const typed = document.createElement('span');
+    const rest = document.createElement('span');
+    rest.className = 'rest';
+
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    const show = (el: Element) => {
+      el.classList.add('shown');
+      if (el === hero) dispatchEvent(new Event('hei'));
+    };
+
+    async function type(target: HTMLElement, text: string, ms: number, remainder?: HTMLElement) {
+      for (let i = 1; i <= text.length && !skipped; i++) {
+        target.textContent = text.slice(0, i);
+        if (remainder) remainder.textContent = text.slice(i);
+        await sleep(ms * (0.5 + Math.random()));
+      }
+    }
+
+    // The next prompt waits with a blinking cursor; its command runs once it scrolls into view
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.unobserve(entry.target);
+        run(steps.findIndex((step) => step.prompt === entry.target));
+      },
+      { rootMargin: '0px 0px -15% 0px' },
+    );
+
+    // A prompt shows its cursor for at least cursorHoldMs after it appears, and always pauses
+    // minPauseMs before typing, so a prompt that appears already in view doesn't type at once
+    const minPauseMs = 350;
+    const cursorHoldMs = 1000;
+    // Average time per character; type() varies each one between half and one and a half times this
+    const commandCharMs = 60;
+    const aboutCharMs = 12;
+    // The beat between a typed command and its output, and between the output and the next prompt
+    const stepPauseMs = 250;
+    let shownAt = 0;
+
+    function wait({ prompt }: Step) {
+      show(prompt);
+      shownAt = performance.now();
+      prompt.classList.add('current');
+      if (prompt.querySelector('.cmd')) observer.observe(prompt);
+    }
+
+    async function run(index: number) {
+      const { prompt, output } = steps[index];
+      const cmd = prompt.querySelector<HTMLElement>('.cmd')!;
+      await sleep(Math.max(minPauseMs, shownAt + cursorHoldMs - performance.now()));
+      await type(cmd, cmd.dataset.text!, commandCharMs);
+      await sleep(stepPauseMs);
+      if (skipped) return;
+      prompt.classList.remove('current');
+      for (const el of output) {
+        if (skipped) return;
+        show(el);
+        if (el === about) await type(typed, aboutText, aboutCharMs, rest);
+        // Let entrance animations (the hero's) finish first; looping ones like the stars never would
+        const entrances = el.getAnimations({ subtree: true }).filter((a) => a.effect?.getTiming().iterations !== Infinity);
+        await Promise.all(entrances.map((a) => a.finished.catch(() => {})));
+      }
+      await sleep(stepPauseMs);
+      if (!skipped) wait(steps[index + 1]);
+    }
+
+    function skip() {
+      if (skipped) return;
+      skipped = true;
+      root.classList.remove('typing');
+      for (const cmd of commands) cmd.textContent = cmd.dataset.text!;
+      typed.textContent = aboutText;
+      rest.textContent = '';
+      observer.disconnect();
+      for (const el of main.querySelectorAll('.current')) el.classList.remove('current');
+      dispatchEvent(new Event('hei'));
+    }
+
+    for (const event of ['keydown', 'click']) addEventListener(event, skip, { once: true });
+
+    // The DOM changes come last, so if anything above throws, the fallback in the inline script shows an intact page
+    for (const cmd of commands) {
+      cmd.dataset.text = cmd.textContent!.trim();
+      cmd.textContent = '';
+    }
+    rest.textContent = aboutText;
+    about.replaceChildren(typed, rest);
+    root.classList.add('typing-started');
+    wait(steps[0]);
+  }
+</script>
+
+<style is:global>
+  /* opacity keeps every box in place, so nothing shifts as content appears, and unlike visibility it
+     keeps the text in the accessibility tree, so screen readers can read sections not yet shown.
+     Opacity can't be undone by a child, so the end prompt is hidden itself, not its wrapper.
+     :where() keeps specificity low so .shown wins. */
+  html.typing :where(main, section, .prompt-end) > :where(:not(section, .prompt-end)) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  html.typing .shown {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .about .rest {
+    color: transparent;
+  }
+</style>
+
 <style>
   .window {
-    width: min(1040px, 100% - 128px);
+    /* Side margin and content padding. 16px at 600px, matching the phone layout, growing to 64px at 1200px */
+    --gutter: clamp(16px, 8vw - 32px, 64px);
+    width: min(1040px, 100% - 2 * var(--gutter));
     margin: 72px auto;
     overflow: hidden;
     background: var(--surface);
@@ -156,7 +302,7 @@ import Layout from '../layouts/Layout.astro';
   }
 
   main {
-    padding: 56px 64px 72px;
+    padding: 56px var(--gutter) 72px;
   }
 
   section {
@@ -181,6 +327,7 @@ import Layout from '../layouts/Layout.astro';
     margin: 12px 0 0;
     padding: 0;
     list-style: none;
+    container-type: inline-size;
   }
 
   li {
@@ -203,6 +350,15 @@ import Layout from '../layouts/Layout.astro';
   .perm,
   .target {
     color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* The rows need about 603px with the link targets and 307px without them, so the targets go
+     first when the list gets narrow instead of the rows wrapping. */
+  @container (width < 610px) {
+    .target {
+      display: none;
+    }
   }
 
   li svg {
