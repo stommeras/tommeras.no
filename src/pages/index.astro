@@ -325,6 +325,7 @@ import Layout from '../layouts/Layout.astro';
     margin: 12px 0 0;
     padding: 0;
     list-style: none;
+    container-type: inline-size;
   }
 
   li {
@@ -347,6 +348,15 @@ import Layout from '../layouts/Layout.astro';
   .perm,
   .target {
     color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* The rows need about 603px with the link targets and 307px without them, so the targets go
+     first when the list gets narrow instead of the rows wrapping. */
+  @container (width < 610px) {
+    .target {
+      display: none;
+    }
   }
 
   li svg {
