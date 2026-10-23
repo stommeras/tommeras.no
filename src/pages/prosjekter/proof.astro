@@ -2,11 +2,13 @@
 import Prompt from '../../components/Prompt.astro';
 import Window from '../../components/Window.astro';
 import Layout from '../../layouts/Layout.astro';
+
+const path = '~/prosjekter/proof';
 ---
 
 <Layout title="Proof | Tømmerås" description="Proof er en cocktaillogg med versjonshistorikk inspirert av git.">
-  <Window path="~/prosjekter/proof" file="README.md">
-    <Prompt path="~/prosjekter/proof" command="cat README.md" />
+  <Window path={path} file="README.md">
+    <Prompt path={path} command="cat README.md" />
     <h1 class="title">
       <span aria-hidden="true"># </span>Proof
     </h1>
@@ -62,8 +64,9 @@ import Layout from '../../layouts/Layout.astro';
       </h3>
       <p>
         Endringene i en versjon regnes ut fra versjonen og forelderen dens. Slettes en versjon midt i en kjede, blir
-        4&nbsp;cl → 5&nbsp;cl → 6&nbsp;cl gin til 4&nbsp;cl → 6&nbsp;cl, en endring ingen gjorde. Derfor kan bare en
-        versjon uten etterkommere slettes.
+        4&nbsp;cl → 5&nbsp;cl → 6&nbsp;cl gin til 4&nbsp;cl → 6&nbsp;cl, en endring ingen gjorde. Å slette hele grenen
+        under i stedet ville latt én bekreftelse fjerne ni versjoner. Derfor kan bare en versjon uten etterkommere
+        slettes.
       </p>
 
       <h3>
@@ -71,14 +74,14 @@ import Layout from '../../layouts/Layout.astro';
       </h3>
       <p>
         Datamodulene kaller Supabase direkte, uten et grensesnitt imellom. En falsk database svarer ja der den ekte sier
-        nei, for eksempel når RLS avviser en rad eller en GRANT mangler. Derfor kjører testene mot en ekte lokal
-        Postgres.
+        nei, for eksempel når RLS avviser en rad eller en GRANT mangler. Derfor kjører ende-til-ende-testene mot en ekte
+        lokal Postgres.
       </p>
     </section>
 
     <p class="back">
       <span class="path" aria-hidden="true">
-        ~/prosjekter/proof
+        {path}
       </span>{' '}
       <span class="arrow" aria-hidden="true">
         ❯

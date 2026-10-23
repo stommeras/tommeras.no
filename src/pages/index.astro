@@ -106,7 +106,7 @@ import Layout from '../layouts/Layout.astro';
             <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
           </svg>
           <span>
-            <a href="/prosjekter/proof">proof/</a> <span class="target">cocktaillogg med versjonshistorikk</span>
+            <a href="/prosjekter/proof">proof/</a> <span class="desc">cocktaillogg med versjonshistorikk</span>
           </span>
         </li>
       </ul>
@@ -289,6 +289,11 @@ import Layout from '../layouts/Layout.astro';
   .target {
     color: var(--muted);
     white-space: nowrap;
+  }
+
+  /* Unlike a link target, the description is the row's only text about the project, so it wraps instead of hiding */
+  .desc {
+    color: var(--muted);
   }
 
   /* The rows need about 603px with the link targets and 307px without them, so the targets go
