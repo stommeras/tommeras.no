@@ -163,7 +163,10 @@ import Layout from '../layouts/Layout.astro';
       { rootMargin: '0px 0px -15% 0px' },
     );
 
-    // The time the waiting prompt became visible, so it shows its cursor for a moment before typing
+    // A prompt shows its cursor for at least cursorHoldMs after it appears, and always pauses
+    // minPauseMs before typing, so a prompt that appears already in view doesn't type at once
+    const minPauseMs = 350;
+    const cursorHoldMs = 1000;
     let shownAt = 0;
 
     function wait({ prompt }: Step) {
@@ -176,7 +179,7 @@ import Layout from '../layouts/Layout.astro';
     async function run(index: number) {
       const { prompt, output } = steps[index];
       const cmd = prompt.querySelector<HTMLElement>('.cmd')!;
-      await sleep(Math.max(350, shownAt + 1000 - performance.now()));
+      await sleep(Math.max(minPauseMs, shownAt + cursorHoldMs - performance.now()));
       await type(cmd, cmd.dataset.text!, 60);
       await sleep(250);
       if (skipped) return;
