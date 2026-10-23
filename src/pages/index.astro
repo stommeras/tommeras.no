@@ -250,7 +250,9 @@ import Layout from '../layouts/Layout.astro';
 
 <style>
   .window {
-    width: min(1040px, 100% - 128px);
+    /* Side margin and content padding. 16px at 600px, matching the phone layout, growing to 64px at 1200px */
+    --gutter: clamp(16px, 8vw - 32px, 64px);
+    width: min(1040px, 100% - 2 * var(--gutter));
     margin: 72px auto;
     overflow: hidden;
     background: var(--surface);
@@ -300,7 +302,7 @@ import Layout from '../layouts/Layout.astro';
   }
 
   main {
-    padding: 56px 64px 72px;
+    padding: 56px var(--gutter) 72px;
   }
 
   section {
