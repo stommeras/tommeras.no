@@ -17,13 +17,30 @@ const path = '~/prosjekter/proof';
       ingredienser, metode, garnityr og hva du syntes om drinken. Du kan lage en branch av en oppskrift eller flytte
       HEAD tilbake til en eldre versjon uten at noe du har skrevet blir overskrevet.
     </p>
-    <img
-      src="/prosjekter/proof.png"
-      width="1200"
-      height="630"
-      loading="lazy"
-      alt="Versjonstreet til en Espresso Martini i Proof: fire versjoner og én branch, med versjon 2a markert som den du lager nå."
-    />
+    <!-- Scrolls sideways on phones, so it takes focus to be scrollable by keyboard too -->
+    <div class="shots" role="region" aria-label="Skjermbilder fra demoen" tabindex="0">
+      <img
+        src="/prosjekter/proof-liste.jpg"
+        width="390"
+        height="844"
+        loading="lazy"
+        alt="Oppskriftslisten i Proof, med Espresso Martini, Gin and Tonic og flere drinker i rotasjon."
+      />
+      <img
+        src="/prosjekter/proof-oppskrift.jpg"
+        width="390"
+        height="844"
+        loading="lazy"
+        alt="Espresso Martini i Proof, med versjon 2a som den du lager nå: bilde, porsjoner og ingredienser."
+      />
+      <img
+        src="/prosjekter/proof-tre.jpg"
+        width="390"
+        height="844"
+        loading="lazy"
+        alt="Versjonstreet til Espresso Martini: fire versjoner og én branch, og endringen fra 3 til 2,5 cl Kahlúa."
+      />
+    </div>
     <p>
       <a href="https://demo.proof.tommeras.no">Prøv demoen</a>{' '}
       <span class="target" aria-hidden="true">
@@ -98,13 +115,33 @@ const path = '~/prosjekter/proof';
     margin: 12px 0 0;
   }
 
-  img {
+  .shots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .shots img {
     display: block;
     width: 100%;
     height: auto;
-    margin-top: 24px;
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: 12px;
+  }
+
+  @media (max-width: 600px) {
+    .shots {
+      grid-template-columns: none;
+      grid-auto-flow: column;
+      grid-auto-columns: 75%;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+    }
+
+    .shots img {
+      scroll-snap-align: start;
+    }
   }
 
   .adr,
