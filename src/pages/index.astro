@@ -7,7 +7,14 @@ import Layout from '../layouts/Layout.astro';
 <Layout>
   <!-- Hides the content before first paint, so the commands can type out one by one -->
   <script is:inline>
-    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('typing');
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const root = document.documentElement;
+      root.classList.add('typing');
+      // A restored scroll position would leave ./hei.sh off-screen, and nothing would start
+      history.scrollRestoration = 'manual';
+      // If the sequence script fails to load or throws during setup, show the page anyway
+      setTimeout(() => root.classList.contains('typing-started') || root.classList.remove('typing'), 3000);
+    }
   </script>
   <div class="window">
     <div class="bar" aria-hidden="true">
@@ -126,18 +133,12 @@ import Layout from '../layouts/Layout.astro';
     steps.push({ prompt: main.querySelector('.prompt-end .prompt')!, output: [] });
 
     const commands = [...main.querySelectorAll<HTMLElement>('.cmd')];
-    for (const cmd of commands) {
-      cmd.dataset.text = cmd.textContent!.trim();
-      cmd.textContent = '';
-    }
 
     // Typed text plus a transparent remainder, so line breaks are fixed from the start
     const aboutText = about.textContent!.replace(/\s+/g, ' ').trim();
     const typed = document.createElement('span');
     const rest = document.createElement('span');
     rest.className = 'rest';
-    rest.textContent = aboutText;
-    about.replaceChildren(typed, rest);
 
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
     const show = (el: Element) => {
@@ -207,19 +208,31 @@ import Layout from '../layouts/Layout.astro';
 
     for (const event of ['keydown', 'click']) addEventListener(event, skip, { once: true });
 
+    // The DOM changes come last, so if anything above throws, the fallback in the inline script shows an intact page
+    for (const cmd of commands) {
+      cmd.dataset.text = cmd.textContent!.trim();
+      cmd.textContent = '';
+    }
+    rest.textContent = aboutText;
+    about.replaceChildren(typed, rest);
+    root.classList.add('typing-started');
     wait(steps[0]);
   }
 </script>
 
 <style is:global>
-  /* visibility keeps every box in place, so nothing shifts as content appears */
-  html.typing main > :not(section),
-  html.typing main > section > * {
-    visibility: hidden;
+  /* opacity keeps every box in place, so nothing shifts as content appears, and unlike visibility it
+     keeps the text in the accessibility tree, so screen readers can read sections not yet shown.
+     Opacity can't be undone by a child, so the end prompt is hidden itself, not its wrapper.
+     :where() keeps specificity low so .shown wins. */
+  html.typing :where(main, section, .prompt-end) > :where(:not(section, .prompt-end)) {
+    opacity: 0;
+    pointer-events: none;
   }
 
   html.typing .shown {
-    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .about .rest {
