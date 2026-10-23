@@ -14,8 +14,6 @@ const title = 'TØMMERÅS';
       {[0, 1, 2].map(() => (
         <span class="star" aria-hidden="true">
           <svg
-            width="24"
-            height="24"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -74,19 +72,21 @@ const title = 'TØMMERÅS';
 <style>
   .hero {
     overflow-x: clip;
-    font-style: italic;
-    text-align: center;
+    padding: 72px 0 96px;
   }
 
   h1 {
     margin: 0;
-    font-size: clamp(2.25rem, 8vw, 3.75rem);
-    font-weight: 400;
+    font-size: clamp(2.75rem, 10vw, 8rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
   }
 
   .subtitle {
-    margin: 0.5em 0 0;
-    font-size: clamp(1.5rem, 5vw, 2.25rem);
+    margin: 24px 0 0;
+    font-size: clamp(1.1875rem, 3vw, 2.125rem);
+    font-style: italic;
   }
 
   .magic {
@@ -96,7 +96,7 @@ const title = 'TØMMERÅS';
   }
 
   .magic-text {
-    background: linear-gradient(to right, var(--primary), var(--fg), var(--primary)) 0 / 200%;
+    background: linear-gradient(to right, var(--pink), var(--lav), var(--mint), var(--pink)) 0 / 200%;
     background-clip: text;
     color: transparent;
     white-space: nowrap;
@@ -106,8 +106,24 @@ const title = 'TØMMERÅS';
   .star {
     position: absolute;
     display: flex;
+    width: 0.7em;
+    height: 0.7em;
+    color: var(--peach);
     opacity: 0.8;
     animation: twinkle var(--pulse) ease infinite;
+  }
+
+  .star:nth-child(2) {
+    color: var(--lav);
+  }
+
+  .star:nth-child(3) {
+    color: var(--pink);
+  }
+
+  .star svg {
+    width: 100%;
+    height: 100%;
   }
 
   @keyframes background-pan {
@@ -125,6 +141,12 @@ const title = 'TØMMERÅS';
     }
     to {
       transform: scale(0) rotate(180deg);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .hero {
+      padding: 40px 0 64px;
     }
   }
 
