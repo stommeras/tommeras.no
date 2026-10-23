@@ -1,0 +1,168 @@
+---
+import Prompt from '../../components/Prompt.astro';
+import Window from '../../components/Window.astro';
+import Layout from '../../layouts/Layout.astro';
+
+const path = '~/prosjekter/proof';
+---
+
+<Layout title="Proof | Tømmerås" description="Proof er en cocktaillogg med versjonshistorikk inspirert av git.">
+  <Window path={path} file="README.md">
+    <Prompt path={path} command="cat README.md" />
+    <h1 class="title">
+      <span aria-hidden="true"># </span>Proof
+    </h1>
+    <p>
+      En cocktaillogg med versjonshistorikk inspirert av git. Hver versjon av en oppskrift er en commit med
+      ingredienser, metode, garnityr og hva du syntes om drinken. Du kan lage en branch av en oppskrift eller flytte
+      HEAD tilbake til en eldre versjon uten at noe du har skrevet blir overskrevet.
+    </p>
+    <!-- Scrolls sideways on phones, so it takes focus to be scrollable by keyboard too -->
+    <div class="shots" role="region" aria-label="Skjermbilder fra demoen" tabindex="0">
+      <img
+        src="/prosjekter/proof-liste.jpg"
+        width="390"
+        height="844"
+        loading="lazy"
+        alt="Oppskriftslisten i Proof, med Espresso Martini, Gin and Tonic og flere drinker i rotasjon."
+      />
+      <img
+        src="/prosjekter/proof-oppskrift.jpg"
+        width="390"
+        height="844"
+        loading="lazy"
+        alt="Espresso Martini i Proof, med versjon 2a som den du lager nå: bilde, porsjoner og ingredienser."
+      />
+      <img
+        src="/prosjekter/proof-tre.jpg"
+        width="390"
+        height="844"
+        loading="lazy"
+        alt="Versjonstreet til Espresso Martini: fire versjoner og én branch, med versjon 3a valgt, fem stjerner og Mr Black i stedet for Kahlúa."
+      />
+    </div>
+    <p>
+      <a href="https://demo.proof.tommeras.no">Prøv demoen</a>{' '}
+      <span class="target" aria-hidden="true">
+        -> demo.proof.tommeras.no
+      </span>
+    </p>
+    <p>
+      Selve appen på proof.tommeras.no deles mellom noen få inviterte. Demoen åpner en oppdiktet bar, og ingenting du
+      endrer forlater fanen.
+    </p>
+
+    <section>
+      <h2>
+        <span aria-hidden="true">## </span>Teknologi
+      </h2>
+      <p>SvelteKit · TypeScript · Supabase · Vercel</p>
+    </section>
+
+    <section>
+      <h2>
+        <span aria-hidden="true">## </span>Valg underveis
+      </h2>
+      <p>
+        Proof er bygget sammen med Claude Code, og de viktigste beslutningene er skrevet ned som ADR-er agenten må
+        forholde seg til. Her er tre eksempler.
+      </p>
+
+      <h3>
+        Versjoner endres aldri <span class="adr">ADR 0017</span>
+      </h3>
+      <p>
+        En versjon skrives aldri om, heller ikke for å rette en skrivefeil. Kunne den det, ville historikken bare vise
+        hva du mener nå, ikke hva som faktisk skjedde.
+      </p>
+
+      <h3>
+        Bare den ytterste versjonen kan slettes <span class="adr">ADR 0004</span>
+      </h3>
+      <p>
+        Du kan bare slette en versjon som ikke har noen etter seg. Slettes 5&nbsp;cl i kjeden 4 → 5 → 6&nbsp;cl gin, ser
+        det ut som du gikk rett fra 4 til 6.
+      </p>
+
+      <h3>
+        Treet tegnes ikke om når du bytter versjon <span class="adr">ADR 0007</span>
+      </h3>
+      <p>
+        Bytter du hvilken versjon du lager, flytter bare markøren seg. Treet står stille, så du ser hva som endret seg.
+      </p>
+    </section>
+
+    <p class="back">
+      <span class="path" aria-hidden="true">
+        {path}
+      </span>{' '}
+      <span class="arrow" aria-hidden="true">
+        ❯
+      </span>{' '}
+      <a href="/">cd ~</a>
+    </p>
+  </Window>
+</Layout>
+
+<style>
+  h3 {
+    margin: 32px 0 0;
+    font-size: 1.0625rem;
+  }
+
+  p {
+    max-width: 64ch;
+    margin: 12px 0 0;
+  }
+
+  .shots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .shots img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+
+  @media (max-width: 600px) {
+    .shots {
+      grid-template-columns: none;
+      grid-auto-flow: column;
+      grid-auto-columns: 75%;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+    }
+
+    .shots img {
+      scroll-snap-align: start;
+    }
+  }
+
+  .adr,
+  .target {
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .back {
+    margin-top: 56px;
+    color: var(--muted);
+    font-size: 0.9375rem;
+  }
+
+  .path {
+    color: var(--lavender);
+  }
+
+  .arrow {
+    color: var(--mint);
+  }
+</style>
