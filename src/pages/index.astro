@@ -5,6 +5,10 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout>
+  <!-- Hides the content before first paint, so the commands can type out one by one -->
+  <script is:inline>
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('typing');
+  </script>
   <div class="window">
     <div class="bar" aria-hidden="true">
       <span class="dots">
@@ -103,6 +107,116 @@ import Layout from '../layouts/Layout.astro';
     </div>
   </div>
 </Layout>
+
+<script>
+  // Each command types out when it scrolls into view, then its output appears. Any key or click skips to the end.
+  const root = document.documentElement;
+  if (root.classList.contains('typing')) {
+    const main = document.querySelector('main')!;
+    const hero = main.querySelector('.hero')!;
+    const about = main.querySelector<HTMLElement>('.about')!;
+    let skipped = false;
+
+    type Step = { prompt: HTMLElement; output: Element[] };
+    const steps: Step[] = [{ prompt: main.querySelector(':scope > .prompt')!, output: [hero] }];
+    for (const section of main.querySelectorAll('section')) {
+      const [prompt, ...output] = section.children;
+      steps.push({ prompt: prompt as HTMLElement, output });
+    }
+    steps.push({ prompt: main.querySelector('.prompt-end .prompt')!, output: [] });
+
+    const commands = [...main.querySelectorAll<HTMLElement>('.cmd')];
+    for (const cmd of commands) {
+      cmd.dataset.text = cmd.textContent!.trim();
+      cmd.textContent = '';
+    }
+
+    // Typed text plus a transparent remainder, so line breaks are fixed from the start
+    const aboutText = about.textContent!.replace(/\s+/g, ' ').trim();
+    const typed = document.createElement('span');
+    const rest = document.createElement('span');
+    rest.className = 'rest';
+    rest.textContent = aboutText;
+    about.replaceChildren(typed, rest);
+
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    const show = (el: Element) => {
+      el.classList.add('shown');
+      if (el === hero) dispatchEvent(new Event('hei'));
+    };
+
+    async function type(target: HTMLElement, text: string, ms: number, remainder?: HTMLElement) {
+      for (let i = 1; i <= text.length && !skipped; i++) {
+        target.textContent = text.slice(0, i);
+        if (remainder) remainder.textContent = text.slice(i);
+        await sleep(ms * (0.5 + Math.random()));
+      }
+    }
+
+    async function run({ prompt, output }: Step) {
+      if (skipped) return;
+      show(prompt);
+      const cmd = prompt.querySelector<HTMLElement>('.cmd');
+      if (!cmd) return;
+      prompt.classList.add('typing-now');
+      await sleep(350);
+      await type(cmd, cmd.dataset.text!, 60);
+      await sleep(250);
+      prompt.classList.remove('typing-now');
+      for (const el of output) {
+        if (skipped) return;
+        show(el);
+        if (el === about) await type(typed, aboutText, 12, rest);
+      }
+      await sleep(250);
+    }
+
+    function skip() {
+      if (skipped) return;
+      skipped = true;
+      root.classList.remove('typing');
+      for (const cmd of commands) cmd.textContent = cmd.dataset.text!;
+      typed.textContent = aboutText;
+      rest.textContent = '';
+      for (const el of main.querySelectorAll('.typing-now')) el.classList.remove('typing-now');
+      dispatchEvent(new Event('hei'));
+    }
+
+    for (const event of ['keydown', 'pointerdown']) addEventListener(event, skip, { once: true });
+
+    // A queue keeps the steps in page order when several scroll into view at once
+    let queue = Promise.resolve();
+    const byPrompt = new Map(steps.map((step) => [step.prompt, step]));
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          observer.unobserve(entry.target);
+          const step = byPrompt.get(entry.target as HTMLElement)!;
+          queue = queue.then(() => run(step));
+        }
+      },
+      { rootMargin: '0px 0px -15% 0px' },
+    );
+    for (const step of steps) observer.observe(step.prompt);
+  }
+</script>
+
+<style is:global>
+  /* visibility keeps every box in place, so nothing shifts as content appears */
+  html.typing main > :not(section),
+  html.typing main > section > * {
+    visibility: hidden;
+  }
+
+  html.typing .shown {
+    visibility: visible;
+  }
+
+  .about .rest {
+    color: transparent;
+  }
+</style>
 
 <style>
   .window {

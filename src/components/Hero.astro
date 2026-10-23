@@ -54,7 +54,12 @@ const title = 'TØMMERÅS';
   }
 
   h1.addEventListener('pointerenter', scramble);
-  scramble();
+  // While the page types out its commands, the scramble waits until ./hei.sh has run
+  if (document.documentElement.classList.contains('typing')) {
+    addEventListener('hei', scramble, { once: true });
+  } else {
+    scramble();
+  }
 
   const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
   for (const [i, star] of document.querySelectorAll<HTMLElement>('.hero .star').entries()) {
