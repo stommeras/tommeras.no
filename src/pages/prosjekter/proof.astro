@@ -1,5 +1,6 @@
 ---
 import Prompt from '../../components/Prompt.astro';
+import Shots from '../../components/Shots.astro';
 import Window from '../../components/Window.astro';
 import Layout from '../../layouts/Layout.astro';
 
@@ -19,8 +20,7 @@ const path = '~/prosjekter/proof';
       ingredienser, metode, garnityr og hva du syntes om drinken. Du kan lage en branch av en oppskrift eller flytte
       HEAD tilbake til en eldre versjon uten at noe du har skrevet blir overskrevet.
     </p>
-    <!-- Scrolls sideways on phones, so it takes focus to be scrollable by keyboard too -->
-    <div class="shots" role="region" aria-label="Skjermbilder fra demoen" tabindex="0">
+    <Shots label="Skjermbilder fra demoen">
       <img
         src="/prosjekter/proof-liste.jpg"
         width="390"
@@ -42,7 +42,7 @@ const path = '~/prosjekter/proof';
         loading="lazy"
         alt="Versjonstreet til Espresso Martini: fire versjoner og én branch, med versjon 3a valgt, fem stjerner og Mr Black i stedet for Kahlúa."
       />
-    </div>
+    </Shots>
     <p>
       <a href="https://demo.proof.tommeras.no">Prøv demoen</a>{' '}
       <span class="target" aria-hidden="true">
@@ -109,35 +109,6 @@ const path = '~/prosjekter/proof';
   p {
     max-width: 64ch;
     margin: 12px 0 0;
-  }
-
-  .shots {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-top: 24px;
-  }
-
-  .shots img {
-    display: block;
-    width: 100%;
-    height: auto;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-  }
-
-  @media (max-width: 600px) {
-    .shots {
-      grid-template-columns: none;
-      grid-auto-flow: column;
-      grid-auto-columns: 75%;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-    }
-
-    .shots img {
-      scroll-snap-align: start;
-    }
   }
 
   .adr,
