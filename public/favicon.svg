@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- The prompt's ❯ and cursor; colors match the light-dark() tokens in src/layouts/Layout.astro -->
+  <style>
+    .tile { fill: #fbfafd; stroke: #d6d0e3; }
+    .arrow { stroke: #2c7a5d; }
+    .cursor { fill: #2c7a5d; }
+    @media (prefers-color-scheme: dark) {
+      .tile { fill: #1e1c27; stroke: #1e1c27; }
+      .arrow { stroke: #9edbbf; }
+      .cursor { fill: #9edbbf; }
+    }
+  </style>
+  <rect class="tile" x="0.5" y="0.5" width="31" height="31" rx="7" />
+  <path class="arrow" d="M8 10.5 13.5 16 8 21.5" fill="none" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" />
+  <rect class="cursor" x="17" y="9" width="7" height="14" rx="1" />
+</svg>
