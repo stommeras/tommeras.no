@@ -95,7 +95,8 @@ const path = '~/prosjekter/proof';
     </section>
 
     <div class="back">
-      <Prompt path={path} command="cd ~" href="/" />
+      <Prompt path={path} command="cd .." href="/prosjekter" comment="alle prosjekter" />
+      <Prompt path={path} command="cd ~" href="/" comment="forsiden" />
     </div>
   </Window>
 </Layout>

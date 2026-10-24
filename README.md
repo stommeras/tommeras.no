@@ -25,7 +25,7 @@ $ bun run format # Prettier
 $ ls -l src/
 drwxr-xr-x  components/   Hero (tittel og undertittel), Prompt, Window
 drwxr-xr-x  layouts/      Layout med fargene som light-dark()-tokens
-drwxr-xr-x  pages/        forsiden, 404 og prosjekter/proof
+drwxr-xr-x  pages/        forsiden, 404 og prosjekter/ med en side per prosjekt
 ```
 
 ## Kontakt

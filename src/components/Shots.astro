@@ -36,6 +36,11 @@ const { label } = Astro.props;
       scroll-snap-type: x mandatory;
     }
 
+    /* A single shot has nothing to scroll to, so it takes the full width */
+    .shots:has(> :only-child) {
+      grid-auto-columns: 100%;
+    }
+
     .shots :global(img) {
       scroll-snap-align: start;
     }

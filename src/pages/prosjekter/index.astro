@@ -1,0 +1,97 @@
+---
+import Prompt from '../../components/Prompt.astro';
+import Shots from '../../components/Shots.astro';
+import Window from '../../components/Window.astro';
+import Layout from '../../layouts/Layout.astro';
+
+const path = '~/prosjekter';
+---
+
+<Layout title="Prosjekter | Tømmerås" description="Prosjektene til Steffen Tømmerås, med skjermbilder.">
+  <Window path={path} file="README.md">
+    <!-- The cd that the ./ link on the home page stands for -->
+    <Prompt command="cd prosjekter" />
+    <h1 class="visually-hidden">Prosjekter</h1>
+
+    <section>
+      <!-- head shows the start of each README, so the text here matches the start of the project page -->
+      <Prompt path={path} command="head proof/README.md" />
+      <h2 class="title">
+        <span aria-hidden="true"># </span>Proof
+      </h2>
+      <p>
+        En cocktaillogg med versjonshistorikk inspirert av git. Hver versjon av en oppskrift er en commit med
+        ingredienser, metode, garnityr og hva du syntes om drinken. Du kan lage en branch av en oppskrift eller flytte
+        HEAD tilbake til en eldre versjon uten at noe du har skrevet blir overskrevet.
+      </p>
+      <Shots label="Skjermbilder fra demoen av Proof">
+        <img
+          src="/prosjekter/proof-liste.jpg"
+          width="390"
+          height="844"
+          loading="lazy"
+          alt="Oppskriftslisten i Proof, med Espresso Martini, Gin and Tonic og flere drinker i rotasjon."
+        />
+        <img
+          src="/prosjekter/proof-oppskrift.jpg"
+          width="390"
+          height="844"
+          loading="lazy"
+          alt="Espresso Martini i Proof, med versjon 2a som den du lager nå: bilde, porsjoner og ingredienser."
+        />
+        <img
+          src="/prosjekter/proof-tre.jpg"
+          width="390"
+          height="844"
+          loading="lazy"
+          alt="Versjonstreet til Espresso Martini: fire versjoner og én branch, med versjon 3a valgt, fem stjerner og Mr Black i stedet for Kahlúa."
+        />
+      </Shots>
+      <div class="more">
+        <Prompt path={path} command="cd proof" href="/prosjekter/proof" comment="les mer" />
+      </div>
+    </section>
+
+    <section>
+      <Prompt path={path} command="head rabra/README.md" />
+      <h2 class="title">
+        <span aria-hidden="true"># </span>#Råbra
+      </h2>
+      <p>
+        En app for å gi kolleger ros. #Råbra er en metode fra helsevesenet for å lære av det som gikk bra, ikke bare av
+        avvikene.
+      </p>
+      <Shots label="Skjermbilde fra demomodus av #Råbra">
+        <img
+          src="/prosjekter/rabra-feed-desktop.jpg"
+          width="1280"
+          height="800"
+          loading="lazy"
+          alt="Feeden i #Råbra på PC, med #Råbra til Kari Nordmann og Jonas Lie side om side."
+        />
+      </Shots>
+      <div class="more">
+        <Prompt path={path} command="cd rabra" href="/prosjekter/rabra" comment="les mer" />
+      </div>
+    </section>
+
+    <div class="back">
+      <Prompt path={path} command="cd ~" href="/" comment="forsiden" />
+    </div>
+  </Window>
+</Layout>
+
+<style>
+  p {
+    max-width: 64ch;
+    margin: 12px 0 0;
+  }
+
+  .more {
+    margin-top: 24px;
+  }
+
+  .back {
+    margin-top: 56px;
+  }
+</style>

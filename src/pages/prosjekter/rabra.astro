@@ -16,8 +16,11 @@ const path = '~/prosjekter/rabra';
       <span aria-hidden="true"># </span>#Råbra
     </h1>
     <p>
-      #Råbra er en metode fra helsevesenet for å lære av det som gikk bra, ikke bare av avvikene. Metoden startet på
-      Universitetssykehuset Nord-Norge og bygger på{' '}
+      En app for å gi kolleger ros. #Råbra er en metode fra helsevesenet for å lære av det som gikk bra, ikke bare av
+      avvikene.
+    </p>
+    <p>
+      Metoden startet på Universitetssykehuset Nord-Norge og bygger på{' '}
       <a href="https://learningfromexcellence.com/">Learning from Excellence</a>.
     </p>
     <p>
@@ -76,7 +79,8 @@ const path = '~/prosjekter/rabra';
     </section>
 
     <div class="back">
-      <Prompt path={path} command="cd ~" href="/" />
+      <Prompt path={path} command="cd .." href="/prosjekter" comment="alle prosjekter" />
+      <Prompt path={path} command="cd ~" href="/" comment="forsiden" />
     </div>
   </Window>
 </Layout>
