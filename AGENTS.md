@@ -13,4 +13,4 @@ Steffen Tømmerås' personal site: one static Astro page, deployed by Vercel fro
 
 ## Waiting for the owner
 
-These are planned but start only on request: projects section, `lab.tommeras.no` (its own repo), theme toggle.
+These are planned but start only on request: `lab.tommeras.no` (its own repo), theme toggle.

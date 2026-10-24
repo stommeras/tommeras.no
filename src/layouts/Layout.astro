@@ -80,6 +80,16 @@ const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tøm
     color: var(--pink);
   }
 
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    margin: -1px;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
   @media (max-width: 600px) {
     body {
       background-image: none;

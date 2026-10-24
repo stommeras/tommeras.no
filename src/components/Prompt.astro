@@ -5,9 +5,12 @@ interface Props {
   // Makes the command a link, for prompts that navigate, like cd ~. A linked prompt stays in the
   // accessibility tree so its link can be reached; the others are hidden from screen readers.
   href?: string;
+  // A shell comment after a linked command that says where it goes, like # forsiden after cd ~.
+  // It sits inside the link, so the link's accessible name explains it too.
+  comment?: string;
 }
 
-const { command, path = '~', href } = Astro.props;
+const { command, path = '~', href, comment } = Astro.props;
 ---
 
 <p class="prompt" class:list={{ idle: !command }} aria-hidden={href ? undefined : 'true'}>
@@ -21,6 +24,7 @@ const { command, path = '~', href } = Astro.props;
     (href ? (
       <a class="cmd" href={href}>
         {command}
+        {comment && <span class="comment"># {comment}</span>}
       </a>
     ) : (
       <span class="cmd">{command}</span>
@@ -41,6 +45,13 @@ const { command, path = '~', href } = Astro.props;
 
   .arrow {
     color: var(--mint);
+  }
+
+  /* inline-block keeps the link's underline off the comment, so only the command looks like the link */
+  .comment {
+    display: inline-block;
+    margin-left: 1ch;
+    color: var(--muted);
   }
 
   .cursor {
