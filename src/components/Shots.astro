@@ -1,0 +1,43 @@
+---
+// A row of screenshots for a project page, one equal column per <img> in the slot
+interface Props {
+  label: string;
+}
+
+const { label } = Astro.props;
+---
+
+<!-- Scrolls sideways on phones, so it takes focus to be scrollable by keyboard too -->
+<div class="shots" role="region" aria-label={label} tabindex="0">
+  <slot />
+</div>
+
+<style>
+  .shots {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .shots :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+
+  @media (max-width: 600px) {
+    .shots {
+      grid-auto-columns: 75%;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+    }
+
+    .shots :global(img) {
+      scroll-snap-align: start;
+    }
+  }
+</style>
