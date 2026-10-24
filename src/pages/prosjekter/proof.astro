@@ -8,6 +8,8 @@ const path = '~/prosjekter/proof';
 
 <Layout title="Proof | Tømmerås" description="Proof er en cocktaillogg med versjonshistorikk inspirert av git.">
   <Window path={path} file="README.md">
+    <!-- The cd that the proof/ link on the home page stands for -->
+    <Prompt command="cd prosjekter/proof" />
     <Prompt path={path} command="cat README.md" />
     <h1 class="title">
       <span aria-hidden="true"># </span>Proof
@@ -69,7 +71,7 @@ const path = '~/prosjekter/proof';
       </p>
 
       <h3>
-        Versjoner endres aldri <span class="adr">ADR 0017</span>
+        <span aria-hidden="true">### </span>Versjoner endres aldri <span class="adr">ADR 0017</span>
       </h3>
       <p>
         En versjon skrives aldri om, heller ikke for å rette en skrivefeil. Kunne den det, ville historikken bare vise
@@ -77,7 +79,7 @@ const path = '~/prosjekter/proof';
       </p>
 
       <h3>
-        Bare den ytterste versjonen kan slettes <span class="adr">ADR 0004</span>
+        <span aria-hidden="true">### </span>Bare den ytterste versjonen kan slettes <span class="adr">ADR 0004</span>
       </h3>
       <p>
         Du kan bare slette en versjon som ikke har noen etter seg. Slettes 5&nbsp;cl i kjeden 4 → 5 → 6&nbsp;cl gin, ser
@@ -85,22 +87,16 @@ const path = '~/prosjekter/proof';
       </p>
 
       <h3>
-        Treet tegnes ikke om når du bytter versjon <span class="adr">ADR 0007</span>
+        <span aria-hidden="true">### </span>Treet tegnes ikke om når du bytter versjon <span class="adr">ADR 0007</span>
       </h3>
       <p>
         Bytter du hvilken versjon du lager, flytter bare markøren seg. Treet står stille, så du ser hva som endret seg.
       </p>
     </section>
 
-    <p class="back">
-      <span class="path" aria-hidden="true">
-        {path}
-      </span>{' '}
-      <span class="arrow" aria-hidden="true">
-        ❯
-      </span>{' '}
-      <a href="/">cd ~</a>
-    </p>
+    <div class="back">
+      <Prompt path={path} command="cd ~" href="/" />
+    </div>
   </Window>
 </Layout>
 
@@ -154,15 +150,5 @@ const path = '~/prosjekter/proof';
 
   .back {
     margin-top: 56px;
-    color: var(--muted);
-    font-size: 0.9375rem;
-  }
-
-  .path {
-    color: var(--lavender);
-  }
-
-  .arrow {
-    color: var(--mint);
   }
 </style>
