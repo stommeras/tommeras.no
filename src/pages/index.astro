@@ -161,8 +161,8 @@ import Layout from '../layouts/Layout.astro';
       }
     }
 
-    // Entrance animations (the hero's) finish; looping ones like the stars never would, so they're left out
-    function entrancesDone(el: Element) {
+    // Resolves when the entrance animations (the hero's) finish; looping ones like the stars never would, so they're left out
+    function entranceAnimationsDone(el: Element) {
       const entrances = el
         .getAnimations({ subtree: true })
         .filter((a) => a.effect?.getTiming().iterations !== Infinity);
@@ -175,7 +175,7 @@ import Layout from '../layouts/Layout.astro';
         if (skipped) return;
         el.classList.add('shown');
         if (el === hero) startHero();
-        await entrancesDone(el);
+        await entranceAnimationsDone(el);
       }
     }
 
