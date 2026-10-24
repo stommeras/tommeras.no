@@ -1,0 +1,73 @@
+---
+// One row of ls -l output. The icon goes in the slot as an inline SVG.
+interface Props {
+  // The mode column, like lrwxr-xr-x for a link or drwxr-xr-x for a directory
+  perm: string;
+  href: string;
+  label: string;
+  // Where a link points, shown after -> as ls -l does
+  target?: string;
+  desc?: string;
+}
+
+const { perm, href, label, target, desc } = Astro.props;
+---
+
+<li>
+  <span class="perm" aria-hidden="true">
+    {perm}
+  </span>
+  <slot />
+  <span>
+    <a href={href}>{label}</a>{' '}
+    {target && (
+      <span class="target" aria-hidden="true">
+        -> {target}
+      </span>
+    )}
+    {desc && <span class="desc">{desc}</span>}
+  </span>
+</li>
+
+<style>
+  li {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 44px;
+    container-type: inline-size;
+  }
+
+  .perm,
+  .target {
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Unlike a link target, the description is the row's only text about the entry, so it wraps instead of hiding */
+  .desc {
+    color: var(--muted);
+  }
+
+  /* The rows need about 603px with the link targets and 307px without them, so the targets go
+     first when the row gets narrow instead of the row wrapping. */
+  @container (width < 610px) {
+    .target {
+      display: none;
+    }
+  }
+
+  li :global(svg) {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: var(--peach);
+  }
+
+  @media (max-width: 600px) {
+    .perm,
+    .target {
+      display: none;
+    }
+  }
+</style>
