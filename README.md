@@ -30,4 +30,4 @@ drwxr-xr-x  pages/        forsiden, 404 og prosjekter/proof
 
 ## Kontakt
 
-[hei@tommeras.no](mailto:hei@tommeras.no) · [GitHub](https://github.com/stommeras) · [LinkedIn](https://www.linkedin.com/in/steffen-tommeras/)
+<img src=".github/readme/mail.svg" width="16" height="16" alt=""> [hei@tommeras.no](mailto:hei@tommeras.no) · <img src=".github/readme/github.svg" width="16" height="16" alt=""> [GitHub](https://github.com/stommeras) · <img src=".github/readme/linkedin.svg" width="16" height="16" alt=""> [LinkedIn](https://www.linkedin.com/in/steffen-tommeras/)
