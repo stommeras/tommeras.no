@@ -87,9 +87,16 @@ const { path, file } = Astro.props;
     /* The 0fr to 1fr row is what lets the fold button animate the height */
     display: grid;
     grid-template-rows: auto 1fr;
+    /* A critically damped spring (stiffness 170, damping 26): it eases in without overshooting */
+    --settle: linear(
+      0, 0.018, 0.058, 0.116, 0.179, 0.25, 0.322, 0.388, 0.454, 0.513, 0.57, 0.623, 0.667, 0.71, 0.745, 0.779, 0.809,
+      0.834, 0.857, 0.876, 0.893, 0.908, 0.921, 0.932, 0.942, 0.95, 0.957, 0.963, 0.969, 0.973, 0.977, 0.981, 0.983,
+      0.986, 0.988, 0.99, 0.991, 0.993, 0.994, 0.995, 0.995, 0.996, 0.997, 0.997, 0.998, 0.998, 0.998, 0.999, 0.999,
+      0.999, 1
+    );
     transition:
-      width 700ms var(--spring),
-      grid-template-rows 700ms var(--spring);
+      width 700ms var(--settle),
+      grid-template-rows 700ms var(--settle);
   }
 
   /* Capped, so the window grows by a few hundred pixels instead of jumping to the full width of a big screen */
@@ -101,24 +108,14 @@ const { path, file } = Astro.props;
     grid-template-rows: auto 0fr;
   }
 
-  /* The fade hides how far the bottom edge travels when a long page folds. The height can't overshoot, so the
-     bounce comes from the content dropping back in on a bouncier spring (stiffness 200, damping 12) instead. */
+  /* The fade hides how far the bottom edge travels when a long page folds */
   .body {
     min-height: 0;
-    transition:
-      opacity 250ms ease-out,
-      translate 1150ms
-        linear(
-          0, 0.05, 0.182, 0.355, 0.545, 0.731, 0.903, 1.036, 1.134, 1.196, 1.225, 1.225, 1.204, 1.17, 1.126, 1.083,
-          1.042, 1.008, 0.98, 0.961, 0.951, 0.948, 0.95, 0.957, 0.966, 0.976, 0.986, 0.994, 1.002, 1.007, 1.01,
-          1.012, 1.012, 1.011, 1.009, 1.007, 1.004, 1.002, 1, 0.999, 0.998, 0.997, 0.997, 0.997, 0.998, 0.998, 0.999,
-          0.999, 1, 1, 1
-        );
+    transition: opacity 250ms ease-out;
   }
 
   .folded .body {
     opacity: 0;
-    translate: 0 -24px;
   }
 
   .window.shake {
@@ -143,10 +140,7 @@ const { path, file } = Astro.props;
     font-size: 0.8125rem;
   }
 
-  /* Above .body, so the content slides under the title bar when it folds, not over it */
   .bar {
-    position: relative;
-    z-index: 1;
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
