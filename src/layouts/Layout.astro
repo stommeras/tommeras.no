@@ -77,11 +77,13 @@ const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tøm
     --mint: light-dark(#2c7a5d, #9edbbf);
     --peach: light-dark(#a2561c, #f3c29a);
     --shadow: rgb(40 30 70 / 0.35);
-    /* A spring that overshoots and settles, for transitions of about 600ms or more */
+    /* A simulated spring (mass 1, stiffness 170, damping 20) that overshoots 2% and settles in 700ms.
+       Mostly damped, so things arrive with a little give instead of bouncing. */
     --spring: linear(
-      0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%, 1.159,
-      1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%,
-      0.997 69.8%, 1.003 76.9%, 1
+      0, 0.016, 0.057, 0.111, 0.181, 0.257, 0.336, 0.409, 0.486, 0.559, 0.627, 0.689, 0.741, 0.791, 0.835, 0.873,
+      0.903, 0.93, 0.953, 0.972, 0.986, 0.997, 1.006, 1.013, 1.017, 1.02, 1.022, 1.022, 1.022, 1.021, 1.02, 1.019,
+      1.017, 1.015, 1.014, 1.012, 1.01, 1.009, 1.007, 1.006, 1.005, 1.004, 1.003, 1.002, 1.002, 1.001, 1.001, 1, 1,
+      1, 1
     );
     /* Every pointermove restarts this, so a spring would never get to overshoot. A short ease-out just trails. */
     transition:
