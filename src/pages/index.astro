@@ -122,11 +122,21 @@ import Layout from '../layouts/Layout.astro';
   // Each command types out when its prompt scrolls into view, then its output appears. Any key or click skips to the end.
   const root = document.documentElement;
   if (root.classList.contains('typing')) {
+    // A prompt shows its cursor for at least cursorHoldMs after it appears, and always pauses
+    // minPauseMs before typing, so a prompt that appears already in view doesn't type at once
+    const minPauseMs = 350;
+    const cursorHoldMs = 1000;
+    // Average time per character; type() varies each one between half and one and a half times this
+    const charMs = 60;
+    // The beat between a typed command and its output, and between the output and the next prompt
+    const stepPauseMs = 250;
+
     const main = document.querySelector('main')!;
     const hero = main.querySelector('.hero')!;
-    const about = main.querySelector<HTMLElement>('.about')!;
-    let skipped = false;
+    const commands = [...main.querySelectorAll<HTMLElement>('.cmd')];
 
+    // One step per prompt. The hero is the output of ./hei.sh, each section starts with its prompt
+    // followed by its output, and the end prompt has no command.
     type Step = { prompt: HTMLElement; output: Element[] };
     const steps: Step[] = [{ prompt: main.querySelector(':scope > .prompt')!, output: [hero] }];
     for (const section of main.querySelectorAll('section')) {
@@ -135,25 +145,37 @@ import Layout from '../layouts/Layout.astro';
     }
     steps.push({ prompt: main.querySelector('.prompt-end .prompt')!, output: [] });
 
-    const commands = [...main.querySelectorAll<HTMLElement>('.cmd')];
-
-    // Typed text plus a transparent remainder, so line breaks are fixed from the start
-    const aboutText = about.textContent!.replace(/\s+/g, ' ').trim();
-    const typed = document.createElement('span');
-    const rest = document.createElement('span');
-    rest.className = 'rest';
+    let skipped = false;
+    let shownAt = 0;
 
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-    const show = (el: Element) => {
-      el.classList.add('shown');
-      if (el === hero) dispatchEvent(new Event('hei'));
-    };
 
-    async function type(target: HTMLElement, text: string, ms: number, remainder?: HTMLElement) {
+    // Hero.astro waits for this event to scramble the title
+    const startHero = () => dispatchEvent(new Event('hei'));
+
+    async function type(cmd: HTMLElement) {
+      const text = cmd.dataset.text!;
       for (let i = 1; i <= text.length && !skipped; i++) {
-        target.textContent = text.slice(0, i);
-        if (remainder) remainder.textContent = text.slice(i);
-        await sleep(ms * (0.5 + Math.random()));
+        cmd.textContent = text.slice(0, i);
+        await sleep(charMs * (0.5 + Math.random()));
+      }
+    }
+
+    // Resolves when the entrance animations (the hero's) finish; looping ones like the stars never would, so they're left out
+    function entranceAnimationsDone(el: Element) {
+      const entrances = el
+        .getAnimations({ subtree: true })
+        .filter((a) => a.effect?.getTiming().iterations !== Infinity);
+      return Promise.all(entrances.map((a) => a.finished.catch(() => {})));
+    }
+
+    // Like a real command's output, each element appears whole, one after the other
+    async function revealOutput(output: Element[]) {
+      for (const el of output) {
+        if (skipped) return;
+        el.classList.add('shown');
+        if (el === hero) startHero();
+        await entranceAnimationsDone(el);
       }
     }
 
@@ -167,44 +189,22 @@ import Layout from '../layouts/Layout.astro';
       { rootMargin: '0px 0px -15% 0px' },
     );
 
-    // A prompt shows its cursor for at least cursorHoldMs after it appears, and always pauses
-    // minPauseMs before typing, so a prompt that appears already in view doesn't type at once
-    const minPauseMs = 350;
-    const cursorHoldMs = 1000;
-    // Average time per character; type() varies each one between half and one and a half times this
-    const commandCharMs = 60;
-    const aboutCharMs = 12;
-    // The beat between a typed command and its output, and between the output and the next prompt
-    const stepPauseMs = 250;
-    let shownAt = 0;
-
-    function wait({ prompt }: Step) {
-      show(prompt);
+    function showPrompt({ prompt }: Step) {
+      prompt.classList.add('shown', 'current');
       shownAt = performance.now();
-      prompt.classList.add('current');
       if (prompt.querySelector('.cmd')) observer.observe(prompt);
     }
 
     async function run(index: number) {
       const { prompt, output } = steps[index];
-      const cmd = prompt.querySelector<HTMLElement>('.cmd')!;
       await sleep(Math.max(minPauseMs, shownAt + cursorHoldMs - performance.now()));
-      await type(cmd, cmd.dataset.text!, commandCharMs);
+      await type(prompt.querySelector<HTMLElement>('.cmd')!);
       await sleep(stepPauseMs);
       if (skipped) return;
       prompt.classList.remove('current');
-      for (const el of output) {
-        if (skipped) return;
-        show(el);
-        if (el === about) await type(typed, aboutText, aboutCharMs, rest);
-        // Let entrance animations (the hero's) finish first; looping ones like the stars never would
-        const entrances = el
-          .getAnimations({ subtree: true })
-          .filter((a) => a.effect?.getTiming().iterations !== Infinity);
-        await Promise.all(entrances.map((a) => a.finished.catch(() => {})));
-      }
+      await revealOutput(output);
       await sleep(stepPauseMs);
-      if (!skipped) wait(steps[index + 1]);
+      if (!skipped) showPrompt(steps[index + 1]);
     }
 
     function skip() {
@@ -212,24 +212,25 @@ import Layout from '../layouts/Layout.astro';
       skipped = true;
       root.classList.remove('typing');
       for (const cmd of commands) cmd.textContent = cmd.dataset.text!;
-      typed.textContent = aboutText;
-      rest.textContent = '';
       observer.disconnect();
       for (const el of main.querySelectorAll('.current')) el.classList.remove('current');
-      dispatchEvent(new Event('hei'));
+      startHero();
+    }
+
+    // Moves each command's text into data-text, so type() can write it back one character at a time
+    function emptyCommands() {
+      for (const cmd of commands) {
+        cmd.dataset.text = cmd.textContent!.trim();
+        cmd.textContent = '';
+      }
     }
 
     for (const event of ['keydown', 'click']) addEventListener(event, skip, { once: true });
 
     // The DOM changes come last, so if anything above throws, the fallback in the inline script shows an intact page
-    for (const cmd of commands) {
-      cmd.dataset.text = cmd.textContent!.trim();
-      cmd.textContent = '';
-    }
-    rest.textContent = aboutText;
-    about.replaceChildren(typed, rest);
+    emptyCommands();
     root.classList.add('typing-started');
-    wait(steps[0]);
+    showPrompt(steps[0]);
   }
 </script>
 
@@ -246,10 +247,6 @@ import Layout from '../layouts/Layout.astro';
   html.typing .shown {
     opacity: 1;
     pointer-events: auto;
-  }
-
-  .about .rest {
-    color: transparent;
   }
 </style>
 
