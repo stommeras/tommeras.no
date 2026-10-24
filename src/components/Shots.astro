@@ -27,6 +27,43 @@ const { label } = Astro.props;
     height: auto;
     border: 1px solid var(--line);
     border-radius: 12px;
+    transition:
+      translate 700ms var(--spring),
+      scale 700ms var(--spring);
+  }
+
+  .shots :global(img:hover) {
+    translate: 0 -6px;
+    scale: 1.03;
+  }
+
+  /* A slight tilt while a shot scrolls through the viewport, every other shot the other way.
+     It uses rotate, so it doesn't fight the hover's translate and scale. */
+  @supports (animation-timeline: view()) {
+    .shots :global(img) {
+      animation: tilt linear both;
+      animation-timeline: view();
+    }
+
+    .shots :global(img:nth-child(even)) {
+      animation-direction: reverse;
+    }
+  }
+
+  @keyframes tilt {
+    from {
+      rotate: -2deg;
+    }
+    to {
+      rotate: 2deg;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shots :global(img) {
+      transition: none;
+      animation: none;
+    }
   }
 
   @media (max-width: 600px) {

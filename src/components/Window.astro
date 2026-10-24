@@ -9,27 +9,52 @@ const { path, file } = Astro.props;
 ---
 
 <div class="window">
-  <div class="bar" aria-hidden="true">
+  <div class="bar">
     <span class="dots">
-      <i></i>
-      <i></i>
-      <i></i>
+      <button class="close" type="button" aria-label="Lukk vinduet"></button>
+      <button class="fold" type="button" aria-label="Brett sammen vinduet" aria-expanded="true"></button>
+      <button class="widen" type="button" aria-label="Gjør vinduet bredere" aria-pressed="false"></button>
     </span>
-    <span class="bar-title">steffen@tommeras: {path}</span>
-    <span class="bar-right">zsh</span>
+    <span class="bar-title" aria-hidden="true">steffen@tommeras: {path}</span>
+    <span class="bar-right" aria-hidden="true">zsh</span>
   </div>
-  <main>
-    <slot />
-  </main>
-  <div class="status" aria-hidden="true">
+  <!-- Wraps everything under the title bar, so the fold button can collapse it to nothing -->
+  <div class="body">
+    <main>
+      <slot />
+    </main>
+    <div class="status" aria-hidden="true">
     <span class="mode">NORMAL</span>
     <span>{file}</span>
     <span class="spacer"></span>
     <span class="hide-mobile">nb_NO</span>
     <span class="hide-mobile">utf-8</span>
-    <span>Ln 1, Col 1</span>
+      <span>Ln 1, Col 1</span>
+    </div>
   </div>
 </div>
+
+<script>
+  const win = document.querySelector<HTMLElement>('.window')!;
+  const body = win.querySelector<HTMLElement>('.body')!;
+  const fold = win.querySelector<HTMLButtonElement>('.fold')!;
+  const widen = win.querySelector<HTMLButtonElement>('.widen')!;
+
+  // The window refuses to close and shakes its head instead
+  win.querySelector('.close')!.addEventListener('click', () => win.classList.add('shake'));
+  win.addEventListener('animationend', () => win.classList.remove('shake'));
+
+  fold.addEventListener('click', () => {
+    const folded = win.classList.toggle('folded');
+    fold.setAttribute('aria-expanded', String(!folded));
+    // Keeps the hidden content out of the tab order and away from screen readers
+    body.inert = folded;
+  });
+
+  widen.addEventListener('click', () => {
+    widen.setAttribute('aria-pressed', String(win.classList.toggle('wide')));
+  });
+</script>
 
 <style>
   .window {
@@ -42,6 +67,39 @@ const { path, file } = Astro.props;
     border: 1px solid var(--line);
     border-radius: 14px;
     box-shadow: 0 30px 60px -30px var(--shadow);
+    /* The 0fr to 1fr row is what lets the fold button animate the height */
+    display: grid;
+    grid-template-rows: auto 1fr;
+    transition:
+      width 800ms var(--spring),
+      grid-template-rows 800ms var(--spring);
+  }
+
+  .window.wide {
+    width: calc(100% - 2 * var(--gutter));
+  }
+
+  .window.folded {
+    grid-template-rows: auto 0fr;
+  }
+
+  .body {
+    min-height: 0;
+  }
+
+  .window.shake {
+    animation: shake 400ms;
+  }
+
+  @keyframes shake {
+    20%,
+    60% {
+      translate: -8px;
+    }
+    40%,
+    80% {
+      translate: 8px;
+    }
   }
 
   .bar,
@@ -65,19 +123,38 @@ const { path, file } = Astro.props;
     gap: 8px;
   }
 
-  .dots i {
+  .dots button {
     width: 12px;
     height: 12px;
+    padding: 0;
+    border: 0;
     border-radius: 50%;
+    cursor: pointer;
     background: var(--pink);
+    transition:
+      translate 700ms var(--spring),
+      scale 700ms var(--spring);
   }
 
-  .dots i:nth-child(2) {
+  .dots button:nth-child(2) {
     background: var(--peach);
+    transition-delay: 60ms;
   }
 
-  .dots i:nth-child(3) {
+  .dots button:nth-child(3) {
     background: var(--mint);
+    transition-delay: 120ms;
+  }
+
+  /* The delays above turn the hop into a wave from left to right */
+  .dots:hover button {
+    translate: 0 -3px;
+    scale: 1.25;
+  }
+
+  .dots button:focus-visible {
+    outline: 2px solid var(--lavender);
+    outline-offset: 2px;
   }
 
   .bar-right {
@@ -127,8 +204,21 @@ const { path, file } = Astro.props;
     padding: 0;
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .window,
+    .dots button {
+      transition: none;
+    }
+
+    .window.shake {
+      animation: none;
+    }
+  }
+
   @media (max-width: 600px) {
-    .window {
+    /* The window already fills a phone, so the widen button has nothing to do there */
+    .window,
+    .window.wide {
       width: auto;
       margin: 0;
       border: 0;
@@ -137,6 +227,7 @@ const { path, file } = Astro.props;
     }
 
     .bar-right,
+    .widen,
     .hide-mobile {
       display: none;
     }
