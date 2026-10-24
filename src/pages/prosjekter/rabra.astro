@@ -1,0 +1,93 @@
+---
+import Prompt from '../../components/Prompt.astro';
+import Shots from '../../components/Shots.astro';
+import Window from '../../components/Window.astro';
+import Layout from '../../layouts/Layout.astro';
+
+const path = '~/prosjekter/rabra';
+---
+
+<Layout title="#Råbra | Tømmerås" description="#Råbra er en app for å gi kolleger ros og lære av det som gikk bra.">
+  <Window path={path} file="README.md">
+    <!-- The cd that the rabra/ link on the home page stands for -->
+    <Prompt command="cd prosjekter/rabra" />
+    <Prompt path={path} command="cat README.md" />
+    <h1 class="title">
+      <span aria-hidden="true"># </span>#Råbra
+    </h1>
+    <p>
+      #Råbra er en metode fra helsevesenet for å lære av det som gikk bra, ikke bare av avvikene. Metoden startet på
+      Universitetssykehuset Nord-Norge og bygger på{' '}
+      <a href="https://learningfromexcellence.com/">Learning from Excellence</a>.
+    </p>
+    <p>
+      Appen gjør #Råbra-kortet digitalt. Du skriver hvem du vil gi ros, hva som gikk bra og hva vi kan lære av det. En
+      administrator godkjenner, og godkjente #Råbra vises i en felles feed for alle som er logget inn.
+    </p>
+    <Shots label="Skjermbilder fra demomodus på PC">
+      <img
+        src="/prosjekter/rabra-feed-desktop.jpg"
+        width="1280"
+        height="800"
+        loading="lazy"
+        alt="Feeden i #Råbra på PC, med #Råbra til Kari Nordmann og Jonas Lie side om side."
+      />
+      <img
+        src="/prosjekter/rabra-admin-desktop.jpg"
+        width="1280"
+        height="800"
+        loading="lazy"
+        alt="Adminsiden «Til godkjenning» på PC, med to #Råbra som venter og knappen «Les og vurder» ved hver."
+      />
+    </Shots>
+    <Shots label="Skjermbilder fra demomodus på mobil">
+      <img
+        src="/prosjekter/rabra-feed.jpg"
+        width="390"
+        height="844"
+        loading="lazy"
+        alt="Feeden i #Råbra med overskriften «Det som gikk råbra, fortjener å bli sett» og en #Råbra til sykepleier Kari Nordmann."
+      />
+      <img
+        src="/prosjekter/rabra-send-inn.jpg"
+        width="390"
+        height="844"
+        loading="lazy"
+        alt="Skjemaet «Hvem fortjener en #Råbra?» med feltene for hvem du vil hedre, hva som gikk bra og hva vi kan lære av det."
+      />
+      <img
+        src="/prosjekter/rabra-admin.jpg"
+        width="390"
+        height="844"
+        loading="lazy"
+        alt="Adminsiden «Til godkjenning» med to #Råbra som venter, hver med knappen «Les og vurder»."
+      />
+    </Shots>
+    <p>
+      Alle logger inn med Microsoft Entra ID, så det finnes ingen åpen demo. Skjermbildene er fra en demomodus med
+      oppdiktede historier.
+    </p>
+
+    <section>
+      <h2>
+        <span aria-hidden="true">## </span>Teknologi
+      </h2>
+      <p>React · TypeScript · Tailwind CSS · Rust · Microsoft Entra ID · Azure</p>
+    </section>
+
+    <div class="back">
+      <Prompt path={path} command="cd ~" href="/" />
+    </div>
+  </Window>
+</Layout>
+
+<style>
+  p {
+    max-width: 64ch;
+    margin: 12px 0 0;
+  }
+
+  .back {
+    margin-top: 56px;
+  }
+</style>
