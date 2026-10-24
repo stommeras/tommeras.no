@@ -24,11 +24,11 @@ const { path, file } = Astro.props;
       <slot />
     </main>
     <div class="status" aria-hidden="true">
-    <span class="mode">NORMAL</span>
-    <span>{file}</span>
-    <span class="spacer"></span>
-    <span class="hide-mobile">nb_NO</span>
-    <span class="hide-mobile">utf-8</span>
+      <span class="mode">NORMAL</span>
+      <span>{file}</span>
+      <span class="spacer"></span>
+      <span class="hide-mobile">nb_NO</span>
+      <span class="hide-mobile">utf-8</span>
       <span>Ln 1, Col 1</span>
     </div>
   </div>
@@ -39,10 +39,20 @@ const { path, file } = Astro.props;
   const body = win.querySelector<HTMLElement>('.body')!;
   const fold = win.querySelector<HTMLButtonElement>('.fold')!;
   const widen = win.querySelector<HTMLButtonElement>('.widen')!;
+  const dots = win.querySelector<HTMLElement>('.dots')!;
+
+  // A class rather than :hover, so the hop plays to the end even if the pointer leaves halfway
+  dots.addEventListener('mouseenter', () => dots.classList.add('hop'));
+  dots.addEventListener('animationend', (event) => {
+    if (event.target === dots.lastElementChild) dots.classList.remove('hop');
+  });
 
   // The window refuses to close and shakes its head instead
   win.querySelector('.close')!.addEventListener('click', () => win.classList.add('shake'));
-  win.addEventListener('animationend', () => win.classList.remove('shake'));
+  // The dots' animations bubble up here too, so only the window's own shake counts
+  win.addEventListener('animationend', (event) => {
+    if (event.target === win) win.classList.remove('shake');
+  });
 
   fold.addEventListener('click', () => {
     const folded = win.classList.toggle('folded');
@@ -131,25 +141,43 @@ const { path, file } = Astro.props;
     border-radius: 50%;
     cursor: pointer;
     background: var(--pink);
-    transition:
-      translate 700ms var(--spring),
-      scale 700ms var(--spring);
   }
 
   .dots button:nth-child(2) {
     background: var(--peach);
-    transition-delay: 60ms;
+    animation-delay: 70ms;
   }
 
   .dots button:nth-child(3) {
     background: var(--mint);
-    transition-delay: 120ms;
+    animation-delay: 140ms;
   }
 
   /* The delays above turn the hop into a wave from left to right */
-  .dots:hover button {
-    translate: 0 -3px;
-    scale: 1.25;
+  .dots.hop button {
+    animation-name: hop;
+    animation-duration: 600ms;
+    animation-timing-function: ease-out;
+  }
+
+  /* A big bounce, a small one, and a squash on each landing */
+  @keyframes hop {
+    25% {
+      translate: 0 -6px;
+      scale: 0.9 1.15;
+    }
+    45% {
+      translate: 0;
+      scale: 1.2 0.8;
+    }
+    65% {
+      translate: 0 -2px;
+      scale: 1;
+    }
+    80% {
+      translate: 0;
+      scale: 1.1 0.9;
+    }
   }
 
   .dots button:focus-visible {
@@ -205,12 +233,12 @@ const { path, file } = Astro.props;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .window,
-    .dots button {
+    .window {
       transition: none;
     }
 
-    .window.shake {
+    .window.shake,
+    .dots.hop button {
       animation: none;
     }
   }

@@ -43,7 +43,7 @@ const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tøm
 ╚══════════════════════════════════════════════╝
 `);
 
-  // The dot spotlight follows the pointer. The springy lag comes from the transition on --mx and --my.
+  // The dot spotlight follows the pointer. The trailing comes from the transition on --mx and --my.
   addEventListener('pointermove', (event) => {
     document.documentElement.style.setProperty('--mx', `${event.clientX}px`);
     document.documentElement.style.setProperty('--my', `${event.clientY}px`);
@@ -51,7 +51,7 @@ const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tøm
 </script>
 
 <style is:global>
-  /* Registered so they can transition, which gives the spotlight its springy lag. They start off-screen. */
+  /* Registered so they can transition, which makes the spotlight trail the pointer. They start off-screen. */
   @property --mx {
     syntax: '<length>';
     inherits: true;
@@ -83,9 +83,10 @@ const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tøm
       1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%,
       0.997 69.8%, 1.003 76.9%, 1
     );
+    /* Every pointermove restarts this, so a spring would never get to overshoot. A short ease-out just trails. */
     transition:
-      --mx 1s var(--spring),
-      --my 1s var(--spring);
+      --mx 300ms ease-out,
+      --my 300ms ease-out;
   }
 
   body {
@@ -143,7 +144,7 @@ const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tøm
     }
   }
 
-  /* The spotlight still follows the pointer, just without the spring */
+  /* The spotlight still follows the pointer, just without trailing behind it */
   @media (prefers-reduced-motion: reduce) {
     :root {
       transition: none;
