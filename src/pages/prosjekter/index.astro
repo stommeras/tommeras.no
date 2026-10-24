@@ -14,14 +14,15 @@ const path = '~/prosjekter';
     <h1 class="visually-hidden">Prosjekter</h1>
 
     <section>
-      <!-- head shows the start of each README, the short version of the project page -->
+      <!-- head shows the start of each README, so the text here matches the start of the project page -->
       <Prompt path={path} command="head proof/README.md" />
       <h2 class="title">
         <span aria-hidden="true"># </span>Proof
       </h2>
       <p>
-        En cocktaillogg med versjonshistorikk inspirert av git. Hver versjon av en oppskrift er en commit, og du kan
-        lage en branch eller gå tilbake til en eldre versjon.
+        En cocktaillogg med versjonshistorikk inspirert av git. Hver versjon av en oppskrift er en commit med
+        ingredienser, metode, garnityr og hva du syntes om drinken. Du kan lage en branch av en oppskrift eller flytte
+        HEAD tilbake til en eldre versjon uten at noe du har skrevet blir overskrevet.
       </p>
       <Shots label="Skjermbilder fra demoen av Proof">
         <img
@@ -56,7 +57,7 @@ const path = '~/prosjekter';
       <h2 class="title">
         <span aria-hidden="true"># </span>#Råbra
       </h2>
-      <p>En app for å gi kolleger ros og lære av det som gikk bra, bygget på #Råbra-metoden fra helsevesenet.</p>
+      <p>En app for å gi kolleger ros og lære av det som gikk bra.</p>
       <Shots label="Skjermbilde fra demomodus av #Råbra">
         <img
           src="/prosjekter/rabra-feed-desktop.jpg"
