@@ -54,15 +54,19 @@ const { path, file } = Astro.props;
     if (event.target === win) win.classList.remove('shake');
   });
 
-  fold.addEventListener('click', () => {
-    const folded = win.classList.toggle('folded');
+  function setFolded(folded: boolean) {
+    win.classList.toggle('folded', folded);
     fold.setAttribute('aria-expanded', String(!folded));
     // Keeps the hidden content out of the tab order and away from screen readers
     body.inert = folded;
-  });
+  }
 
+  fold.addEventListener('click', () => setFolded(!win.classList.contains('folded')));
+
+  // Widening a folded window unfolds it too, since a wide title bar alone shows nothing new
   widen.addEventListener('click', () => {
     widen.setAttribute('aria-pressed', String(win.classList.toggle('wide')));
+    setFolded(false);
   });
 </script>
 
@@ -80,9 +84,10 @@ const { path, file } = Astro.props;
     /* The 0fr to 1fr row is what lets the fold button animate the height */
     display: grid;
     grid-template-rows: auto 1fr;
+    /* A much softer overshoot than --spring, since the whole window moves */
     transition:
-      width 800ms var(--spring),
-      grid-template-rows 800ms var(--spring);
+      width 500ms cubic-bezier(0.3, 1.15, 0.5, 1),
+      grid-template-rows 500ms cubic-bezier(0.3, 1.15, 0.5, 1);
   }
 
   .window.wide {
