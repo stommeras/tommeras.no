@@ -98,6 +98,14 @@ import Layout from '../layouts/Layout.astro';
 
 <script>
   // Each command types out when its prompt scrolls into view, then its output appears. Any key or click skips to the end.
+  //
+  // Markup this script expects inside <main>:
+  //   - a Prompt directly in <main>, followed by the Hero (the output of ./hei.sh)
+  //   - each <section> starts with its Prompt; every later child is that prompt's output
+  //   - the final Prompt, without a command, sits inside .prompt-end
+  // Classes: the inline guard adds html.typing, this script adds html.typing-started, .shown on
+  // each revealed element, and .current on the prompt with the cursor (styled in Prompt.astro).
+  // Event: "hei" on window when ./hei.sh's output appears, which Hero.astro waits for.
   const root = document.documentElement;
   if (root.classList.contains('typing')) {
     // A prompt shows its cursor for at least cursorHoldMs after it appears, and always pauses
