@@ -84,9 +84,6 @@ const { path, file } = Astro.props;
     border: 1px solid var(--line);
     border-radius: 14px;
     box-shadow: 0 30px 60px -30px var(--shadow);
-    /* The 0fr to 1fr row is what lets the fold button animate the height */
-    display: grid;
-    grid-template-rows: auto 1fr;
     /* A critically damped spring (stiffness 170, damping 26): it eases in without overshooting */
     --settle: linear(
       0, 0.018, 0.058, 0.116, 0.179, 0.25, 0.322, 0.388, 0.454, 0.513, 0.57, 0.623, 0.667, 0.71, 0.745, 0.779, 0.809,
@@ -94,9 +91,7 @@ const { path, file } = Astro.props;
       0.986, 0.988, 0.99, 0.991, 0.993, 0.994, 0.995, 0.995, 0.996, 0.997, 0.997, 0.998, 0.998, 0.998, 0.999, 0.999,
       0.999, 1
     );
-    transition:
-      width 700ms var(--settle),
-      grid-template-rows 700ms var(--settle);
+    transition: width 700ms var(--settle);
   }
 
   /* Capped, so the window grows by a few hundred pixels instead of jumping to the full width of a big screen */
@@ -104,17 +99,18 @@ const { path, file } = Astro.props;
     width: min(1280px, 100% - 2 * var(--gutter));
   }
 
-  .window.folded {
-    grid-template-rows: auto 0fr;
-  }
-
-  /* The fade hides how far the bottom edge travels when a long page folds */
+  /* interpolate-size lets the height animate to and from auto. Browsers without it fold instantly.
+     The fade hides how far the bottom edge travels when a long page folds. */
   .body {
-    min-height: 0;
-    transition: opacity 250ms ease-out;
+    overflow: clip;
+    interpolate-size: allow-keywords;
+    transition:
+      height 700ms var(--settle),
+      opacity 250ms ease-out;
   }
 
   .folded .body {
+    height: 0;
     opacity: 0;
   }
 
