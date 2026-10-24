@@ -2,13 +2,29 @@
 interface Props {
   command?: string;
   path?: string;
+  // Makes the command a link, for prompts that navigate, like cd ~. A linked prompt stays in the
+  // accessibility tree so its link can be reached; the others are hidden from screen readers.
+  href?: string;
 }
 
-const { command, path = '~' } = Astro.props;
+const { command, path = '~', href } = Astro.props;
 ---
 
-<p class="prompt" class:list={{ idle: !command }} aria-hidden="true">
-  <span class="path">{path}</span> <span class="arrow">❯</span> {command && <span class="cmd">{command}</span>}
+<p class="prompt" class:list={{ idle: !command }} aria-hidden={href ? undefined : 'true'}>
+  <span class="path" aria-hidden="true">
+    {path}
+  </span>{' '}
+  <span class="arrow" aria-hidden="true">
+    ❯
+  </span>{' '}
+  {command &&
+    (href ? (
+      <a class="cmd" href={href}>
+        {command}
+      </a>
+    ) : (
+      <span class="cmd">{command}</span>
+    ))}
   <span class="cursor" />
 </p>
 
