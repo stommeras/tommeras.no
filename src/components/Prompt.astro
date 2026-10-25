@@ -60,7 +60,8 @@ const { command, path = '~', href, comment } = Astro.props;
 
   /* .current shows the cursor on the prompt that waits for or types its command */
   .idle .cursor,
-  :global(.current) .cursor {
+  :global(.current) .cursor,
+  .prompt:has(a:hover, a:focus-visible) .cursor {
     display: inline-block;
     width: 0.55em;
     height: 1.1em;

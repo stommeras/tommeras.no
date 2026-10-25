@@ -18,18 +18,141 @@ const { path, file } = Astro.props;
     <span class="bar-title">steffen@tommeras: {path}</span>
     <span class="bar-right">zsh</span>
   </div>
-  <main>
-    <slot />
-  </main>
-  <div class="status" aria-hidden="true">
-    <span class="mode">NORMAL</span>
-    <span>{file}</span>
-    <span class="spacer"></span>
-    <span class="hide-mobile">nb_NO</span>
-    <span class="hide-mobile">utf-8</span>
-    <span>Ln 1, Col 1</span>
+  <div class="content">
+    <main>
+      <slot />
+    </main>
+    <div class="status" aria-hidden="true">
+      <span class="mode">NORMAL</span>
+      <span>{file}</span>
+      <span class="cmdline"></span>
+      <span class="hide-mobile">nb_NO</span>
+      <span class="hide-mobile">utf-8</span>
+      <span>Ln 1, Col 1</span>
+    </div>
   </div>
 </div>
+
+<script>
+  type Mode = 'normal' | 'visual' | 'command';
+
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const ease = 'cubic-bezier(0.32, 0.72, 0, 1)';
+  const quitPattern = /^(q|quit|wq|x|qa|wqa)(!?)$/;
+
+  // Every page has exactly one Window
+  const win = document.querySelector<HTMLElement>('.window')!;
+  const [close, minimize, maximize] = win.querySelectorAll('.dots i');
+  const content = win.querySelector<HTMLElement>('.content')!;
+  const modeLabel = win.querySelector<HTMLElement>('.mode')!;
+  const cmdline = win.querySelector<HTMLElement>('.cmdline')!;
+
+  const shake = (offsets: number[], duration: number) => {
+    if (reducedMotion.matches) return;
+    win.animate({ translate: offsets.map((x) => `${x}px`) }, duration);
+  };
+  const shakeSoft = () => shake([0, -10, 10, -8, 8, -4, 4, 0], 450);
+  const shakeHard = () => shake([0, -43, 39, -35, 31, -27, 24, -21, 18, -15, 12, -10, 8, -6, 4, -2, 0], 900);
+
+  let mode: Mode = 'normal';
+  let line = '';
+  let message = '';
+
+  const selectionMode = (): Mode => (getSelection()?.isCollapsed === false ? 'visual' : 'normal');
+
+  const render = () => {
+    modeLabel.textContent = mode.toUpperCase();
+    modeLabel.dataset.mode = mode;
+    cmdline.textContent = mode === 'command' ? `:${line}` : message;
+    cmdline.classList.toggle('error', mode !== 'command');
+  };
+
+  const run = (command: string) => {
+    const match = command.match(quitPattern);
+    if (!match) {
+      message = `E492: Ikke en editorkommando: ${command}`;
+    } else if (match[2]) {
+      shakeHard();
+      message = 'Godt forsøk.';
+    } else {
+      shakeSoft();
+      message = 'E37: Ingen skriving siden siste endring (legg til ! for å overstyre)';
+    }
+  };
+
+  close.addEventListener('click', () => {
+    run('q');
+    render();
+  });
+
+  document.addEventListener('selectionchange', () => {
+    if (mode === 'command') return;
+    mode = selectionMode();
+    render();
+  });
+
+  addEventListener('keydown', (event) => {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (mode !== 'command') {
+      if (event.key !== ':') return;
+      mode = 'command';
+      line = '';
+      message = '';
+    } else if (event.key === 'Escape' || (event.key === 'Backspace' && !line)) {
+      mode = selectionMode();
+    } else if (event.key === 'Enter') {
+      if (line) run(line);
+      mode = selectionMode();
+    } else if (event.key === 'Backspace') {
+      line = line.slice(0, -1);
+    } else if (event.key.length === 1) {
+      line += event.key;
+    } else {
+      return;
+    }
+    event.preventDefault();
+    render();
+  });
+
+  const isShaded = () => win.classList.contains('shaded');
+
+  const snapshot = () => {
+    const { width, marginTop, marginBottom, borderRadius, boxShadow } = getComputedStyle(win);
+    const { top, height } = win.getBoundingClientRect();
+    const onScreen = `${Math.max(0, Math.min(height, innerHeight - top))}px`;
+    return { width, marginTop, marginBottom, borderRadius, boxShadow, height: onScreen, minHeight: '0px' };
+  };
+
+  const morph = (change: () => void) => {
+    const from = snapshot();
+    const contentHeight = `${content.offsetHeight}px`;
+    change();
+    if (reducedMotion.matches) return;
+    const options = { duration: 400, easing: ease };
+    win.animate([from, snapshot()], options);
+    if (isShaded()) content.animate({ height: [contentHeight, contentHeight] }, options);
+  };
+
+  const setShaded = (shaded: boolean) => {
+    win.classList.toggle('shaded', shaded);
+    content.inert = shaded;
+  };
+
+  minimize.addEventListener('click', () => morph(() => setShaded(!isShaded())));
+
+  const toggleMaximize = () =>
+    morph(() => {
+      const rolledUp = isShaded();
+      win.classList.toggle('maximized', rolledUp || !win.classList.contains('maximized'));
+      setShaded(false);
+    });
+
+  maximize.addEventListener('click', toggleMaximize);
+
+  win.querySelector('.bar')!.addEventListener('dblclick', (event) => {
+    if (!(event.target as Element).closest('.dots')) toggleMaximize();
+  });
+</script>
 
 <style>
   .window {
@@ -37,7 +160,8 @@ const { path, file } = Astro.props;
     --gutter: clamp(16px, 8vw - 32px, 64px);
     width: min(1040px, 100% - 2 * var(--gutter));
     margin: 72px auto;
-    overflow: hidden;
+    /* clip, not hidden. hidden would make the window a scroll container and stop the status bar from sticking */
+    overflow: clip;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 14px;
@@ -58,6 +182,7 @@ const { path, file } = Astro.props;
     gap: 16px;
     padding: 12px 16px;
     border-bottom: 1px solid var(--line);
+    user-select: none;
   }
 
   .dots {
@@ -72,6 +197,51 @@ const { path, file } = Astro.props;
     background: var(--pink);
   }
 
+  @media (hover: hover) {
+    .dots i:hover {
+      cursor: pointer;
+      scale: 1.2;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .dots i {
+      transition: scale 0.8s
+        linear(
+          0,
+          0.01 0.7%,
+          0.046 1.5%,
+          0.192 3.2%,
+          0.391 4.8%,
+          0.954 8.8%,
+          1.201 11%,
+          1.347 13%,
+          1.388 14%,
+          1.41 15.1%,
+          1.411 15.9%,
+          1.4 16.8%,
+          1.342 18.6%,
+          1.256 20.3%,
+          1.013 24.5%,
+          0.913 26.7%,
+          0.857 28.6%,
+          0.831 30.6%,
+          0.833 32.1%,
+          0.851 33.7%,
+          1.024 41.6%,
+          1.055 43.8%,
+          1.069 46%,
+          1.061 49.3%,
+          0.991 57.1%,
+          0.972 61.4%,
+          0.974 64.8%,
+          1.011 76.7%,
+          0.996 91.2%,
+          1
+        );
+    }
+  }
+
   .dots i:nth-child(2) {
     background: var(--peach);
   }
@@ -82,6 +252,38 @@ const { path, file } = Astro.props;
 
   .bar-right {
     justify-self: end;
+  }
+
+  .maximized {
+    width: 100%;
+    margin-block: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .maximized:not(.shaded) {
+    min-height: 100dvh;
+  }
+
+  .content {
+    overflow: clip;
+  }
+
+  .maximized:not(.shaded) .content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+
+  .maximized main {
+    flex: 1;
+  }
+
+  .shaded .content {
+    height: 0;
   }
 
   main {
@@ -108,6 +310,8 @@ const { path, file } = Astro.props;
   }
 
   .status {
+    position: sticky;
+    bottom: 0;
     display: flex;
     border-top: 1px solid var(--line);
   }
@@ -122,9 +326,24 @@ const { path, file } = Astro.props;
     font-weight: 700;
   }
 
-  .status .spacer {
+  .status .mode[data-mode='visual'] {
+    background: var(--lavender);
+  }
+
+  .status .mode[data-mode='command'] {
+    background: var(--peach);
+  }
+
+  .status .cmdline {
     flex: 1;
-    padding: 0;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .status .cmdline.error {
+    color: var(--pink);
   }
 
   @media (max-width: 600px) {
