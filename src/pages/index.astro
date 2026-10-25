@@ -123,7 +123,7 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <script>
-  // Each command types out when its prompt scrolls into view, then its output appears. Any key or click skips to the end.
+  // Each command types out when its prompt scrolls into view or above it, then its output appears. Any key or click skips to the end.
   //
   // Markup this script expects inside <main>:
   //   - a Prompt directly in <main>, followed by the Hero (the output of ./hei.sh)
@@ -192,10 +192,11 @@ import Layout from '../layouts/Layout.astro';
       }
     }
 
-    // The next prompt waits with a blinking cursor; its command runs once it scrolls into view
+    // The next prompt waits with a blinking cursor; its command runs once it scrolls into view. A visitor
+    // who has scrolled past it, like one who jumped to the bottom, shouldn't have to scroll back up.
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) return;
+        if (!entry.isIntersecting && entry.boundingClientRect.top > 0) return;
         observer.unobserve(entry.target);
         run(steps.findIndex((step) => step.prompt === entry.target));
       },
