@@ -72,6 +72,8 @@ const { path } = Astro.props;
   const render = () => {
     modeLabel.textContent = mode.toUpperCase();
     modeLabel.dataset.mode = mode;
+    // Prompt.astro hides its cursor in command mode, since the cursor moves to the command line
+    win.dataset.mode = mode;
     cmdline.textContent = mode === 'command' ? `:${line}` : message;
     cmdline.classList.toggle('error', mode !== 'command');
   };
@@ -365,6 +367,29 @@ const { path } = Astro.props;
 
   .status .cmdline.error {
     color: var(--pink);
+  }
+
+  /* Same block as the prompt cursor in Prompt.astro */
+  .window[data-mode='command'] .cmdline::after {
+    content: '';
+    display: inline-block;
+    width: 0.55em;
+    height: 1.1em;
+    vertical-align: -0.2em;
+    background: var(--mint);
+    animation: cmdline-blink 1s steps(1) infinite;
+  }
+
+  @keyframes cmdline-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cmdline::after {
+      animation: none;
+    }
   }
 
   @media (max-width: 600px) {
