@@ -1,5 +1,4 @@
 ---
-import Entry from '../../components/Entry.astro';
 import Prompt from '../../components/Prompt.astro';
 import Shots from '../../components/Shots.astro';
 import Window from '../../components/Window.astro';
@@ -45,6 +44,12 @@ const path = '~/prosjekter/proof';
       />
     </Shots>
     <p>
+      <a href="https://demo.proof.tommeras.no">Prøv demoen</a>{' '}
+      <span class="target" aria-hidden="true">
+        -> demo.proof.tommeras.no
+      </span>
+    </p>
+    <p>
       Selve appen på proof.tommeras.no deles mellom noen få inviterte. Demoen åpner en oppdiktet bar, og ingenting du
       endrer forlater fanen.
     </p>
@@ -89,27 +94,6 @@ const path = '~/prosjekter/proof';
       </p>
     </section>
 
-    <div class="demo">
-      <Prompt path={path} command="ls -l demo" />
-      <ul>
-        <Entry perm="lrwxr-xr-x" href="https://demo.proof.tommeras.no" label="demo" target="demo.proof.tommeras.no">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M15 3h6v6" />
-            <path d="M10 14 21 3" />
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-          </svg>
-        </Entry>
-      </ul>
-    </div>
-
     <div class="back">
       <Prompt path={path} command="cd .." href="/prosjekter" comment="alle prosjekter" />
       <Prompt path={path} command="cd ~" href="/" comment="forsiden" />
@@ -128,24 +112,15 @@ const path = '~/prosjekter/proof';
     margin: 12px 0 0;
   }
 
-  .adr {
+  .adr,
+  .target {
     color: var(--muted);
     font-size: 0.8125rem;
     font-weight: 400;
     white-space: nowrap;
   }
 
-  .demo {
-    margin-top: 56px;
-  }
-
-  ul {
-    margin: 12px 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
   .back {
-    margin-top: 24px;
+    margin-top: 56px;
   }
 </style>
