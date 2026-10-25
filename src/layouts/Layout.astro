@@ -66,8 +66,6 @@ const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tøm
 
   :root {
     color-scheme: light dark;
-    /* Reserves the scrollbar's space, so the window doesn't jump sideways when folding makes the page fit */
-    scrollbar-gutter: stable;
     --bg: light-dark(#eeeaf4, #16151d);
     --surface: light-dark(#fbfafd, #1e1c27);
     --chrome: light-dark(#e4dfee, #26232f);
@@ -79,14 +77,6 @@ const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tøm
     --mint: light-dark(#2c7a5d, #9edbbf);
     --peach: light-dark(#a2561c, #f3c29a);
     --shadow: rgb(40 30 70 / 0.35);
-    /* A simulated spring (mass 1, stiffness 170, damping 20) that overshoots 2% and settles in 700ms.
-       Mostly damped, so things arrive with a little give instead of bouncing. */
-    --spring: linear(
-      0, 0.016, 0.057, 0.111, 0.181, 0.257, 0.336, 0.409, 0.486, 0.559, 0.627, 0.689, 0.741, 0.791, 0.835, 0.873,
-      0.903, 0.93, 0.953, 0.972, 0.986, 0.997, 1.006, 1.013, 1.017, 1.02, 1.022, 1.022, 1.022, 1.021, 1.02, 1.019,
-      1.017, 1.015, 1.014, 1.012, 1.01, 1.009, 1.007, 1.006, 1.005, 1.004, 1.003, 1.002, 1.002, 1.001, 1.001, 1, 1,
-      1, 1
-    );
     /* Every pointermove restarts this, so a spring would never get to overshoot. A short ease-out just trails. */
     transition:
       --mx 200ms ease-out,
@@ -95,8 +85,6 @@ const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tøm
 
   body {
     margin: 0;
-    /* The widen button's spring overshoots the viewport for a moment, and that shouldn't flash a scrollbar */
-    overflow-x: clip;
     /* fixed keeps the dots lined up with the fixed spotlight layer below */
     background: var(--bg) radial-gradient(var(--line) 1px, transparent 1px) 0 0 / 24px 24px fixed;
     color: var(--fg);

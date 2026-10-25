@@ -9,69 +9,27 @@ const { path, file } = Astro.props;
 ---
 
 <div class="window">
-  <div class="bar">
+  <div class="bar" aria-hidden="true">
     <span class="dots">
-      <button class="close" type="button" aria-label="Lukk vinduet"></button>
-      <button class="fold" type="button" aria-label="Brett sammen vinduet" aria-expanded="true"></button>
-      <button class="widen" type="button" aria-label="Gjør vinduet bredere" aria-pressed="false"></button>
+      <i></i>
+      <i></i>
+      <i></i>
     </span>
-    <span class="bar-title" aria-hidden="true">steffen@tommeras: {path}</span>
-    <span class="bar-right" aria-hidden="true">zsh</span>
+    <span class="bar-title">steffen@tommeras: {path}</span>
+    <span class="bar-right">zsh</span>
   </div>
-  <!-- Wraps everything under the title bar, so the fold button can collapse it to nothing -->
-  <div class="body">
-    <main>
-      <slot />
-    </main>
-    <div class="status" aria-hidden="true">
-      <span class="mode">NORMAL</span>
-      <span>{file}</span>
-      <span class="spacer"></span>
-      <span class="hide-mobile">nb_NO</span>
-      <span class="hide-mobile">utf-8</span>
-      <span>Ln 1, Col 1</span>
-    </div>
+  <main>
+    <slot />
+  </main>
+  <div class="status" aria-hidden="true">
+    <span class="mode">NORMAL</span>
+    <span>{file}</span>
+    <span class="spacer"></span>
+    <span class="hide-mobile">nb_NO</span>
+    <span class="hide-mobile">utf-8</span>
+    <span>Ln 1, Col 1</span>
   </div>
 </div>
-
-<script>
-  const win = document.querySelector<HTMLElement>('.window')!;
-  const body = win.querySelector<HTMLElement>('.body')!;
-  const fold = win.querySelector<HTMLButtonElement>('.fold')!;
-  const widen = win.querySelector<HTMLButtonElement>('.widen')!;
-  const dots = win.querySelector<HTMLElement>('.dots')!;
-
-  // A class rather than :hover, so the nudge plays to the end even if the pointer leaves halfway
-  dots.addEventListener('pointerover', (event) => {
-    if (event.target !== dots) (event.target as HTMLElement).classList.add('nudge');
-  });
-  dots.addEventListener('animationend', (event) => (event.target as HTMLElement).classList.remove('nudge'));
-
-  // The window refuses to close and shakes its head instead
-  win.querySelector('.close')!.addEventListener('click', () => win.classList.add('shake'));
-  // The dots' animations bubble up here too, so only the window's own shake counts
-  win.addEventListener('animationend', (event) => {
-    if (event.target === win) win.classList.remove('shake');
-  });
-
-  function setFolded(folded: boolean) {
-    win.classList.toggle('folded', folded);
-    fold.setAttribute('aria-expanded', String(!folded));
-    // Keeps the hidden content out of the tab order and away from screen readers
-    body.inert = folded;
-    // Folding shrinks the page, and the browser would scroll up to fit, sliding the title bar down mid-animation.
-    // Holding the page at its current scroll position keeps the bar still.
-    document.body.style.minHeight = folded ? `${scrollY + innerHeight}px` : '';
-  }
-
-  fold.addEventListener('click', () => setFolded(!win.classList.contains('folded')));
-
-  // Widening a folded window unfolds it too, since a wide title bar alone shows nothing new
-  widen.addEventListener('click', () => {
-    widen.setAttribute('aria-pressed', String(win.classList.toggle('wide')));
-    setFolded(false);
-  });
-</script>
 
 <style>
   .window {
@@ -84,49 +42,6 @@ const { path, file } = Astro.props;
     border: 1px solid var(--line);
     border-radius: 14px;
     box-shadow: 0 30px 60px -30px var(--shadow);
-    /* A critically damped spring (stiffness 170, damping 26): it eases in without overshooting */
-    --settle: linear(
-      0, 0.018, 0.058, 0.116, 0.179, 0.25, 0.322, 0.388, 0.454, 0.513, 0.57, 0.623, 0.667, 0.71, 0.745, 0.779, 0.809,
-      0.834, 0.857, 0.876, 0.893, 0.908, 0.921, 0.932, 0.942, 0.95, 0.957, 0.963, 0.969, 0.973, 0.977, 0.981, 0.983,
-      0.986, 0.988, 0.99, 0.991, 0.993, 0.994, 0.995, 0.995, 0.996, 0.997, 0.997, 0.998, 0.998, 0.998, 0.999, 0.999,
-      0.999, 1
-    );
-    transition: width 700ms var(--settle);
-  }
-
-  /* Capped, so the window grows by a few hundred pixels instead of jumping to the full width of a big screen */
-  .window.wide {
-    width: min(1280px, 100% - 2 * var(--gutter));
-  }
-
-  /* interpolate-size lets the height animate to and from auto. Browsers without it fold instantly.
-     The fade hides how far the bottom edge travels when a long page folds. */
-  .body {
-    overflow: clip;
-    interpolate-size: allow-keywords;
-    transition:
-      height 700ms var(--settle),
-      opacity 250ms ease-out;
-  }
-
-  .folded .body {
-    height: 0;
-    opacity: 0;
-  }
-
-  .window.shake {
-    animation: shake 400ms;
-  }
-
-  @keyframes shake {
-    20%,
-    60% {
-      translate: -8px;
-    }
-    40%,
-    80% {
-      translate: 8px;
-    }
   }
 
   .bar,
@@ -150,45 +65,19 @@ const { path, file } = Astro.props;
     gap: 8px;
   }
 
-  .dots button {
+  .dots i {
     width: 12px;
     height: 12px;
-    padding: 0;
-    border: 0;
     border-radius: 50%;
-    cursor: pointer;
     background: var(--pink);
   }
 
-  .dots button:nth-child(2) {
+  .dots i:nth-child(2) {
     background: var(--peach);
   }
 
-  .dots button:nth-child(3) {
+  .dots i:nth-child(3) {
     background: var(--mint);
-  }
-
-  /* A flick upward, like a spring (stiffness 300, damping 14) kicked from rest: up 3px, a dip below, and settle.
-     The easing is the spring's displacement over time, so the keyframe only sets the peak. */
-  .dots .nudge {
-    animation: nudge 830ms
-      linear(
-        0, 0.432, 0.724, 0.915, 0.993, 0.984, 0.902, 0.776, 0.612, 0.446, 0.274, 0.117, -0.009, -0.114, -0.184,
-        -0.229, -0.247, -0.243, -0.222, -0.19, -0.149, -0.105, -0.065, -0.026, 0.004, 0.03, 0.048, 0.057, 0.061,
-        0.06, 0.054, 0.046, 0.036, 0.025, 0.015, 0.006, -0.002, -0.008, -0.012, -0.014, -0.015, -0.015, -0.013,
-        -0.011, -0.009, -0.006, -0.003, -0.001, 0.001, 0.002, 0
-      );
-  }
-
-  @keyframes nudge {
-    to {
-      translate: 0 -3px;
-    }
-  }
-
-  .dots button:focus-visible {
-    outline: 2px solid var(--lavender);
-    outline-offset: 2px;
   }
 
   .bar-right {
@@ -238,22 +127,8 @@ const { path, file } = Astro.props;
     padding: 0;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .window,
-    .body {
-      transition: none;
-    }
-
-    .window.shake,
-    .dots .nudge {
-      animation: none;
-    }
-  }
-
   @media (max-width: 600px) {
-    /* The window already fills a phone, so the widen button has nothing to do there */
-    .window,
-    .window.wide {
+    .window {
       width: auto;
       margin: 0;
       border: 0;
@@ -262,7 +137,6 @@ const { path, file } = Astro.props;
     }
 
     .bar-right,
-    .widen,
     .hide-mobile {
       display: none;
     }
