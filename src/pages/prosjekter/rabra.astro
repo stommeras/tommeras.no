@@ -1,4 +1,5 @@
 ---
+import Entry from '../../components/Entry.astro';
 import Prompt from '../../components/Prompt.astro';
 import Shots from '../../components/Shots.astro';
 import Window from '../../components/Window.astro';
@@ -66,12 +67,26 @@ const path = '~/prosjekter/rabra';
         alt="Adminsiden «Til godkjenning» med to #Råbra som venter, hver med knappen «Les og vurder»."
       />
     </Shots>
-    <p>
-      <a href="https://demo.rabra.tommeras.no">Prøv demoen</a>{' '}
-      <span class="target" aria-hidden="true">
-        -> demo.rabra.tommeras.no
-      </span>
-    </p>
+    <div class="demo">
+      <Prompt path={path} command="ls -l demo" />
+      <ul>
+        <Entry perm="lrwxr-xr-x" href="https://demo.rabra.tommeras.no" label="demo" target="demo.rabra.tommeras.no">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M15 3h6v6" />
+            <path d="M10 14 21 3" />
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+          </svg>
+        </Entry>
+      </ul>
+    </div>
     <p>
       Selve appen krever innlogging med jobbkonto. Demoen viser oppdiktede historier, og ingenting du endrer forlater
       fanen.
@@ -97,10 +112,14 @@ const path = '~/prosjekter/rabra';
     margin: 12px 0 0;
   }
 
-  .target {
-    color: var(--muted);
-    font-size: 0.8125rem;
-    white-space: nowrap;
+  .demo {
+    margin-top: 24px;
+  }
+
+  ul {
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
   }
 
   .back {
