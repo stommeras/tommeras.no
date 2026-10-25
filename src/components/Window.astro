@@ -2,10 +2,9 @@
 interface Props {
   // The path the title bar shows, as in steffen@tommeras: ~
   path: string;
-  file: string;
 }
 
-const { path, file } = Astro.props;
+const { path } = Astro.props;
 ---
 
 <div class="window">
@@ -16,25 +15,35 @@ const { path, file } = Astro.props;
       <i></i>
     </span>
     <span class="bar-title">steffen@tommeras: {path}</span>
-    <span class="bar-right">zsh</span>
+    <span class="bar-right">nvim</span>
   </div>
   <div class="content">
     <main>
       <slot />
     </main>
     <div class="status" aria-hidden="true">
-      <span class="mode">NORMAL</span>
-      <span>{file}</span>
+      <span class="mode" data-mode="normal">NORMAL</span>
+      <!-- The window is zsh in a Neovim :terminal buffer, named term://{cwd}//{pid}:{cmd} -->
+      <span>term://~//4242:zsh</span>
       <span class="cmdline"></span>
       <span class="hide-mobile">nb_NO</span>
       <span class="hide-mobile">utf-8</span>
-      <span>Ln 1, Col 1</span>
+      <span class="hide-mobile">Ln 1, Col 1</span>
     </div>
+    <!-- While index.astro types its commands, the keys go to zsh, as in Neovim's terminal mode. Set
+    before first paint, so the label doesn't flash NORMAL -->
+    <script is:inline>
+      if (document.documentElement.classList.contains('typing')) {
+        const mode = document.querySelector('.window .mode');
+        mode.textContent = 'TERMINAL';
+        mode.dataset.mode = 'terminal';
+      }
+    </script>
   </div>
 </div>
 
 <script>
-  type Mode = 'normal' | 'visual' | 'command';
+  type Mode = 'terminal' | 'normal' | 'visual' | 'command';
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const ease = 'cubic-bezier(0.32, 0.72, 0, 1)';
@@ -54,7 +63,7 @@ const { path, file } = Astro.props;
   const shakeSoft = () => shake([0, -10, 10, -8, 8, -4, 4, 0], 450);
   const shakeHard = () => shake([0, -43, 39, -35, 31, -27, 24, -21, 18, -15, 12, -10, 8, -6, 4, -2, 0], 900);
 
-  let mode: Mode = 'normal';
+  let mode = modeLabel.dataset.mode as Mode;
   let line = '';
   let message = '';
 
@@ -76,7 +85,7 @@ const { path, file } = Astro.props;
       message = 'Godt forsøk.';
     } else {
       shakeSoft();
-      message = 'E37: Ingen skriving siden siste endring (legg til ! for å overstyre)';
+      message = 'E948: Jobben kjører fortsatt (legg til ! for å avslutte jobben)';
     }
   };
 
@@ -86,7 +95,15 @@ const { path, file } = Astro.props;
   });
 
   document.addEventListener('selectionchange', () => {
-    if (mode === 'command') return;
+    // The command line keeps its mode, and in terminal mode only a selection changes it
+    if (mode === 'command' || (mode === 'terminal' && selectionMode() === 'normal')) return;
+    mode = selectionMode();
+    render();
+  });
+
+  // index.astro sends this when its commands finish typing or are skipped
+  addEventListener('typed', () => {
+    if (mode !== 'terminal') return;
     mode = selectionMode();
     render();
   });
@@ -324,6 +341,10 @@ const { path, file } = Astro.props;
     background: var(--mint);
     color: var(--surface);
     font-weight: 700;
+  }
+
+  .status .mode[data-mode='terminal'] {
+    background: var(--pink);
   }
 
   .status .mode[data-mode='visual'] {
