@@ -44,26 +44,6 @@ const path = '~/prosjekter/proof';
         alt="Versjonstreet til Espresso Martini: fire versjoner og én branch, med versjon 3a valgt, fem stjerner og Mr Black i stedet for Kahlúa."
       />
     </Shots>
-    <div class="demo">
-      <Prompt path={path} command="ls -l demo" />
-      <ul>
-        <Entry perm="lrwxr-xr-x" href="https://demo.proof.tommeras.no" label="demo" target="demo.proof.tommeras.no">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M15 3h6v6" />
-            <path d="M10 14 21 3" />
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-          </svg>
-        </Entry>
-      </ul>
-    </div>
     <p>
       Selve appen på proof.tommeras.no deles mellom noen få inviterte. Demoen åpner en oppdiktet bar, og ingenting du
       endrer forlater fanen.
@@ -109,6 +89,27 @@ const path = '~/prosjekter/proof';
       </p>
     </section>
 
+    <div class="demo">
+      <Prompt path={path} command="ls -l demo" />
+      <ul>
+        <Entry perm="lrwxr-xr-x" href="https://demo.proof.tommeras.no" label="demo" target="demo.proof.tommeras.no">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M15 3h6v6" />
+            <path d="M10 14 21 3" />
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+          </svg>
+        </Entry>
+      </ul>
+    </div>
+
     <div class="back">
       <Prompt path={path} command="cd .." href="/prosjekter" comment="alle prosjekter" />
       <Prompt path={path} command="cd ~" href="/" comment="forsiden" />
@@ -135,7 +136,7 @@ const path = '~/prosjekter/proof';
   }
 
   .demo {
-    margin-top: 24px;
+    margin-top: 56px;
   }
 
   ul {
@@ -145,6 +146,6 @@ const path = '~/prosjekter/proof';
   }
 
   .back {
-    margin-top: 56px;
+    margin-top: 24px;
   }
 </style>

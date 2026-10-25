@@ -67,6 +67,18 @@ const path = '~/prosjekter/rabra';
         alt="Adminsiden «Til godkjenning» med to #Råbra som venter, hver med knappen «Les og vurder»."
       />
     </Shots>
+    <p>
+      Selve appen krever innlogging med jobbkonto. Demoen viser oppdiktede historier, og ingenting du endrer forlater
+      fanen.
+    </p>
+
+    <section>
+      <h2>
+        <span aria-hidden="true">## </span>Teknologi
+      </h2>
+      <p>React · TypeScript · Tailwind CSS · Rust · Microsoft Entra ID · Azure</p>
+    </section>
+
     <div class="demo">
       <Prompt path={path} command="ls -l demo" />
       <ul>
@@ -87,17 +99,6 @@ const path = '~/prosjekter/rabra';
         </Entry>
       </ul>
     </div>
-    <p>
-      Selve appen krever innlogging med jobbkonto. Demoen viser oppdiktede historier, og ingenting du endrer forlater
-      fanen.
-    </p>
-
-    <section>
-      <h2>
-        <span aria-hidden="true">## </span>Teknologi
-      </h2>
-      <p>React · TypeScript · Tailwind CSS · Rust · Microsoft Entra ID · Azure</p>
-    </section>
 
     <div class="back">
       <Prompt path={path} command="cd .." href="/prosjekter" comment="alle prosjekter" />
@@ -113,7 +114,7 @@ const path = '~/prosjekter/rabra';
   }
 
   .demo {
-    margin-top: 24px;
+    margin-top: 56px;
   }
 
   ul {
@@ -123,6 +124,6 @@ const path = '~/prosjekter/rabra';
   }
 
   .back {
-    margin-top: 56px;
+    margin-top: 24px;
   }
 </style>
