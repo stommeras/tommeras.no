@@ -19,6 +19,13 @@ $ bun run build  # astro check og statisk bygg til dist/
 $ bun run format # Prettier
 ```
 
+Skjermbildene i `public/prosjekter/` tas fra de åpne demoene. Kjør skriptet når en demo har endret seg, og se over bildene før du committer dem:
+
+```console
+$ bunx playwright install chromium # første gang
+$ bun run screenshots
+```
+
 ## Filer
 
 ```console
