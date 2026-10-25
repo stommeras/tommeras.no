@@ -34,117 +34,124 @@ const { path, file } = Astro.props;
 </div>
 
 <script>
+  type Mode = 'normal' | 'visual' | 'command';
+
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const ease = 'cubic-bezier(0.32, 0.72, 0, 1)';
+  const quitPattern = /^(q|quit|wq|x|qa|wqa)(!?)$/;
 
-  const quit = /^(q|quit|wq|x|qa|wqa)(!?)$/;
+  // Every page has exactly one Window
+  const win = document.querySelector<HTMLElement>('.window')!;
+  const [close, minimize, maximize] = win.querySelectorAll('.dots i');
+  const content = win.querySelector<HTMLElement>('.content')!;
+  const modeLabel = win.querySelector<HTMLElement>('.mode')!;
+  const cmdline = win.querySelector<HTMLElement>('.cmdline')!;
 
-  for (const win of document.querySelectorAll<HTMLElement>('.window')) {
-    const [close, minimize, maximize] = win.querySelectorAll('.dots i');
-    const content = win.querySelector<HTMLElement>('.content')!;
-    const mode = win.querySelector<HTMLElement>('.mode')!;
-    const cmdline = win.querySelector<HTMLElement>('.cmdline')!;
+  const shake = (offsets: number[], duration: number) => {
+    if (reducedMotion.matches) return;
+    win.animate({ translate: offsets.map((x) => `${x}px`) }, duration);
+  };
+  const shakeSoft = () => shake([0, -10, 10, -8, 8, -4, 4, 0], 450);
+  const shakeHard = () => shake([0, -24, 24, -22, 22, -18, 18, -14, 14, -10, 10, -6, 6, 0], 500);
 
-    const shake = (offsets: number[], duration: number) => {
-      if (reducedMotion.matches) return;
-      win.animate({ translate: offsets.map((x) => `${x}px`) }, duration);
-    };
-    const shakeNo = () => shake([0, -10, 10, -8, 8, -4, 4, 0], 450);
-    const shakeHard = () => shake([0, -24, 24, -22, 22, -18, 18, -14, 14, -10, 10, -6, 6, 0], 500);
+  let mode: Mode = 'normal';
+  let line = '';
+  let message = '';
 
-    close.addEventListener('click', shakeNo);
+  const selectionMode = (): Mode => (getSelection()?.isCollapsed === false ? 'visual' : 'normal');
 
-    let visual = false;
-    let command: string | null = null;
-    let message = '';
-    let error = false;
+  const render = () => {
+    modeLabel.textContent = mode.toUpperCase();
+    modeLabel.dataset.mode = mode;
+    cmdline.textContent = mode === 'command' ? `:${line}` : message;
+    cmdline.classList.toggle('error', mode !== 'command');
+  };
 
-    const render = () => {
-      const name = command !== null ? 'COMMAND' : visual ? 'VISUAL' : 'NORMAL';
-      mode.textContent = name;
-      mode.dataset.mode = name.toLowerCase();
-      cmdline.textContent = command !== null ? `:${command}` : message;
-      cmdline.classList.toggle('error', command === null && error);
-    };
+  const run = (command: string) => {
+    const match = command.match(quitPattern);
+    if (!match) {
+      message = `E492: Ikke en editorkommando: ${command}`;
+    } else if (match[2]) {
+      shakeHard();
+      message = 'Godt forsøk.';
+    } else {
+      shakeSoft();
+      message = 'E37: Vinduet nekter å lukkes (legg til ! for å overstyre)';
+    }
+  };
 
-    const run = (line: string) => {
-      const match = line.match(quit);
-      error = true;
-      if (!match) {
-        message = `E492: Ikke en editorkommando: ${line}`;
-      } else if (match[2]) {
-        shakeHard();
-        message = 'Godt forsøk.';
-      } else {
-        shakeNo();
-        message = 'E37: Vinduet nekter å lukkes (legg til ! for å overstyre)';
-      }
-    };
+  close.addEventListener('click', () => {
+    run('q');
+    render();
+  });
 
-    document.addEventListener('selectionchange', () => {
-      visual = getSelection()?.isCollapsed === false;
-      render();
+  document.addEventListener('selectionchange', () => {
+    if (mode === 'command') return;
+    mode = selectionMode();
+    render();
+  });
+
+  addEventListener('keydown', (event) => {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (mode !== 'command') {
+      if (event.key !== ':') return;
+      mode = 'command';
+      line = '';
+      message = '';
+    } else if (event.key === 'Escape' || (event.key === 'Backspace' && !line)) {
+      mode = selectionMode();
+    } else if (event.key === 'Enter') {
+      if (line) run(line);
+      mode = selectionMode();
+    } else if (event.key === 'Backspace') {
+      line = line.slice(0, -1);
+    } else if (event.key.length === 1) {
+      line += event.key;
+    } else {
+      return;
+    }
+    event.preventDefault();
+    render();
+  });
+
+  const isShaded = () => win.classList.contains('shaded');
+
+  const snapshot = () => {
+    const { width, marginTop, marginBottom, borderRadius, boxShadow } = getComputedStyle(win);
+    const { top, height } = win.getBoundingClientRect();
+    const onScreen = `${Math.max(0, Math.min(height, innerHeight - top))}px`;
+    return { width, marginTop, marginBottom, borderRadius, boxShadow, height: onScreen, minHeight: '0px' };
+  };
+
+  const morph = (change: () => void) => {
+    const from = snapshot();
+    const contentHeight = `${content.offsetHeight}px`;
+    change();
+    if (reducedMotion.matches) return;
+    const options = { duration: 400, easing: ease };
+    win.animate([from, snapshot()], options);
+    if (isShaded()) content.animate({ height: [contentHeight, contentHeight] }, options);
+  };
+
+  const setShaded = (shaded: boolean) => {
+    win.classList.toggle('shaded', shaded);
+    content.inert = shaded;
+  };
+
+  minimize.addEventListener('click', () => morph(() => setShaded(!isShaded())));
+
+  const toggleMaximize = () =>
+    morph(() => {
+      const rolledUp = isShaded();
+      win.classList.toggle('maximized', rolledUp || !win.classList.contains('maximized'));
+      setShaded(false);
     });
 
-    addEventListener('keydown', (event) => {
-      if (event.ctrlKey || event.metaKey || event.altKey) return;
-      if (command === null) {
-        if (event.key !== ':') return;
-        command = '';
-        message = '';
-      } else if (event.key === 'Escape') {
-        command = null;
-      } else if (event.key === 'Enter') {
-        if (command) run(command);
-        command = null;
-      } else if (event.key === 'Backspace') {
-        command = command ? command.slice(0, -1) : null;
-      } else if (event.key.length === 1) {
-        command += event.key;
-      } else {
-        return;
-      }
-      event.preventDefault();
-      render();
-    });
+  maximize.addEventListener('click', toggleMaximize);
 
-    const frame = () => {
-      const { width, marginTop, marginBottom, borderRadius, boxShadow } = getComputedStyle(win);
-      const { top, height } = win.getBoundingClientRect();
-      const onScreen = `${Math.max(0, Math.min(height, innerHeight - top))}px`;
-      return { width, marginTop, marginBottom, borderRadius, boxShadow, height: onScreen, minHeight: '0px' };
-    };
-
-    const morph = (change: () => void) => {
-      const from = frame();
-      const contentHeight = `${content.offsetHeight}px`;
-      change();
-      if (reducedMotion.matches) return;
-      const options = { duration: 400, easing: ease };
-      win.animate([from, frame()], options);
-      if (win.classList.contains('shaded')) content.animate({ height: [contentHeight, contentHeight] }, options);
-    };
-
-    const setShaded = (shaded: boolean) => {
-      win.classList.toggle('shaded', shaded);
-      content.inert = shaded;
-    };
-
-    minimize.addEventListener('click', () => morph(() => setShaded(!win.classList.contains('shaded'))));
-
-    const toggleMaximize = () =>
-      morph(() => {
-        const rolledUp = win.classList.contains('shaded');
-        win.classList.toggle('maximized', rolledUp || !win.classList.contains('maximized'));
-        setShaded(false);
-      });
-
-    maximize.addEventListener('click', toggleMaximize);
-
-    win.querySelector('.bar')!.addEventListener('dblclick', (event) => {
-      if (!(event.target as Element).closest('.dots')) toggleMaximize();
-    });
-  }
+  win.querySelector('.bar')!.addEventListener('dblclick', (event) => {
+    if (!(event.target as Element).closest('.dots')) toggleMaximize();
+  });
 </script>
 
 <style>
@@ -190,9 +197,11 @@ const { path, file } = Astro.props;
     background: var(--pink);
   }
 
-  .dots i:hover {
-    cursor: pointer;
-    scale: 1.2;
+  @media (hover: hover) {
+    .dots i:hover {
+      cursor: pointer;
+      scale: 1.2;
+    }
   }
 
   @media (prefers-reduced-motion: no-preference) {
