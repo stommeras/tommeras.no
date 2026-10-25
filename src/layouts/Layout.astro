@@ -42,9 +42,28 @@ const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tøm
 ║                                              ║
 ╚══════════════════════════════════════════════╝
 `);
+
+  // The dot spotlight follows the pointer. The trailing comes from the transition on --mx and --my.
+  addEventListener('pointermove', (event) => {
+    document.documentElement.style.setProperty('--mx', `${event.clientX}px`);
+    document.documentElement.style.setProperty('--my', `${event.clientY}px`);
+  });
 </script>
 
 <style is:global>
+  /* Registered so they can transition, which makes the spotlight trail the pointer. They start off-screen. */
+  @property --mx {
+    syntax: '<length>';
+    inherits: true;
+    initial-value: -999px;
+  }
+
+  @property --my {
+    syntax: '<length>';
+    inherits: true;
+    initial-value: -999px;
+  }
+
   :root {
     color-scheme: light dark;
     --bg: light-dark(#eeeaf4, #16151d);
@@ -58,16 +77,32 @@ const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tøm
     --mint: light-dark(#2c7a5d, #9edbbf);
     --peach: light-dark(#a2561c, #f3c29a);
     --shadow: rgb(40 30 70 / 0.35);
+    /* Every pointermove restarts this, so a spring would never get to overshoot. A short ease-out just trails. */
+    transition:
+      --mx 200ms ease-out,
+      --my 200ms ease-out;
   }
 
   body {
     margin: 0;
-    background: var(--bg) radial-gradient(var(--line) 1px, transparent 1px) 0 0 / 24px 24px;
+    /* fixed keeps the dots lined up with the fixed spotlight layer below */
+    background: var(--bg) radial-gradient(var(--line) 1px, transparent 1px) 0 0 / 24px 24px fixed;
     color: var(--fg);
     font-family: var(--font-mono);
     font-size: 1.0625rem;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* Brighter dots around the pointer, under everything else on the page */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(var(--lavender) 1px, transparent 1px) 0 0 / 24px 24px;
+    mask: radial-gradient(180px at var(--mx) var(--my), #000, transparent);
   }
 
   a {
@@ -94,6 +129,17 @@ const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tøm
     body {
       background-image: none;
       font-size: 0.9375rem;
+    }
+
+    body::before {
+      display: none;
+    }
+  }
+
+  /* The spotlight still follows the pointer, just without trailing behind it */
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      transition: none;
     }
   }
 </style>
