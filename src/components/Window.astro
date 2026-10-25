@@ -34,7 +34,7 @@ const { path } = Astro.props;
 </div>
 
 <script>
-  type Mode = 'normal' | 'visual' | 'command';
+  type Mode = 'terminal' | 'normal' | 'visual' | 'command';
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const ease = 'cubic-bezier(0.32, 0.72, 0, 1)';
@@ -54,7 +54,8 @@ const { path } = Astro.props;
   const shakeSoft = () => shake([0, -10, 10, -8, 8, -4, 4, 0], 450);
   const shakeHard = () => shake([0, -43, 39, -35, 31, -27, 24, -21, 18, -15, 12, -10, 8, -6, 4, -2, 0], 900);
 
-  let mode: Mode = 'normal';
+  // While index.astro types its commands, the keys go to zsh, as in Neovim's terminal mode
+  let mode: Mode = document.documentElement.classList.contains('typing') ? 'terminal' : 'normal';
   let line = '';
   let message = '';
 
@@ -80,13 +81,22 @@ const { path } = Astro.props;
     }
   };
 
+  render();
+
   close.addEventListener('click', () => {
     run('q');
     render();
   });
 
   document.addEventListener('selectionchange', () => {
-    if (mode === 'command') return;
+    if (mode === 'command' || (mode === 'terminal' && selectionMode() === 'normal')) return;
+    mode = selectionMode();
+    render();
+  });
+
+  // index.astro sends this when its commands finish typing or are skipped
+  addEventListener('typed', () => {
+    if (mode !== 'terminal') return;
     mode = selectionMode();
     render();
   });
@@ -324,6 +334,10 @@ const { path } = Astro.props;
     background: var(--mint);
     color: var(--surface);
     font-weight: 700;
+  }
+
+  .status .mode[data-mode='terminal'] {
+    background: var(--pink);
   }
 
   .status .mode[data-mode='visual'] {

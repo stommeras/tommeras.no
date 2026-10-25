@@ -131,7 +131,8 @@ import Layout from '../layouts/Layout.astro';
   //   - the final Prompt, without a command, sits inside .prompt-end
   // Classes: the inline guard adds html.typing, this script adds html.typing-started, .shown on
   // each revealed element, and .current on the prompt with the cursor (styled in Prompt.astro).
-  // Event: "hei" on window when ./hei.sh's output appears, which Hero.astro waits for.
+  // Events on window: "hei" when ./hei.sh's output appears, which Hero.astro waits for, and "typed"
+  // when the last prompt appears or the sequence is skipped, which Window.astro waits for.
   const root = document.documentElement;
   if (root.classList.contains('typing')) {
     // A prompt shows its cursor for at least cursorHoldMs after it appears, and always pauses
@@ -205,6 +206,7 @@ import Layout from '../layouts/Layout.astro';
       prompt.classList.add('shown', 'current');
       shownAt = performance.now();
       if (prompt.querySelector('.cmd')) observer.observe(prompt);
+      else dispatchEvent(new Event('typed'));
     }
 
     async function run(index: number) {
@@ -227,6 +229,7 @@ import Layout from '../layouts/Layout.astro';
       observer.disconnect();
       for (const el of main.querySelectorAll('.current')) el.classList.remove('current');
       startHero();
+      dispatchEvent(new Event('typed'));
     }
 
     // Moves each command's text into data-text, so type() can write it back one character at a time
