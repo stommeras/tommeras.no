@@ -67,8 +67,13 @@ const path = '~/prosjekter/rabra';
       />
     </Shots>
     <p>
-      Appen krever innlogging med jobbkonto, så det finnes ingen åpen demo ennå. Skjermbildene er tatt i en demomodus
-      med oppdiktede historier.
+      <a href="https://demo.rabra.tommeras.no">Prøv demoen</a>{' '}
+      <span class="target" aria-hidden="true">
+        -> demo.rabra.tommeras.no
+      </span>
+    </p>
+    <p>
+      Selve appen krever innlogging med jobbkonto. Demoen og skjermbildene viser oppdiktede historier.
     </p>
 
     <section>
@@ -89,6 +94,12 @@ const path = '~/prosjekter/rabra';
   p {
     max-width: 64ch;
     margin: 12px 0 0;
+  }
+
+  .target {
+    color: var(--muted);
+    font-size: 0.8125rem;
+    white-space: nowrap;
   }
 
   .back {
