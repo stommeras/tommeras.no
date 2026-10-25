@@ -25,7 +25,7 @@ const { path, file } = Astro.props;
     <div class="status" aria-hidden="true">
       <span class="mode">NORMAL</span>
       <span>{file}</span>
-      <span class="spacer"></span>
+      <span class="cmdline"></span>
       <span class="hide-mobile">nb_NO</span>
       <span class="hide-mobile">utf-8</span>
       <span>Ln 1, Col 1</span>
@@ -37,23 +37,81 @@ const { path, file } = Astro.props;
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const ease = 'cubic-bezier(0.32, 0.72, 0, 1)';
 
-  // Vim's visual mode: the status bar says VISUAL while text is selected
-  const modes = document.querySelectorAll<HTMLElement>('.window .mode');
-  document.addEventListener('selectionchange', () => {
-    const visual = getSelection()?.isCollapsed === false;
-    for (const mode of modes) {
-      mode.textContent = visual ? 'VISUAL' : 'NORMAL';
-      mode.classList.toggle('visual', visual);
-    }
-  });
+  // Quit commands as vim spells them, with an optional ! to force
+  const quit = /^(q|quit|wq|x|qa|wqa)(!?)$/;
 
   for (const win of document.querySelectorAll<HTMLElement>('.window')) {
     const [close, minimize, maximize] = win.querySelectorAll('.dots i');
     const content = win.querySelector<HTMLElement>('.content')!;
+    const mode = win.querySelector<HTMLElement>('.mode')!;
+    const cmdline = win.querySelector<HTMLElement>('.cmdline')!;
 
-    close.addEventListener('click', () => {
+    // The window refuses to close and shakes instead, like a rejected macOS login
+    const shake = (offsets: number[], duration: number) => {
       if (reducedMotion.matches) return;
-      win.animate({ translate: ['0', '-10px', '10px', '-8px', '8px', '-4px', '4px', '0'] }, 450);
+      win.animate({ translate: offsets.map((x) => `${x}px`) }, duration);
+    };
+    const shakeNo = () => shake([0, -10, 10, -8, 8, -4, 4, 0], 450);
+    // For :q!, wider and twice as many swings, each one quicker
+    const shakeHard = () => shake([0, -24, 24, -22, 22, -18, 18, -14, 14, -10, 10, -6, 6, 0], 500);
+
+    close.addEventListener('click', shakeNo);
+
+    // The status bar plays vim: VISUAL while text is selected, and a : command line that refuses to quit
+    let visual = false;
+    let command: string | null = null;
+    let message = '';
+    let error = false;
+
+    const render = () => {
+      const name = command !== null ? 'COMMAND' : visual ? 'VISUAL' : 'NORMAL';
+      mode.textContent = name;
+      mode.dataset.mode = name.toLowerCase();
+      cmdline.textContent = command !== null ? `:${command}` : message;
+      cmdline.classList.toggle('error', command === null && error);
+    };
+
+    const run = (line: string) => {
+      const match = line.match(quit);
+      error = true;
+      if (!match) {
+        message = `E492: Ikke en editorkommando: ${line}`;
+      } else if (match[2]) {
+        shakeHard();
+        message = 'Godt forsøk.';
+      } else {
+        shakeNo();
+        message = 'E37: Vinduet nekter å lukkes (legg til ! for å overstyre)';
+      }
+    };
+
+    document.addEventListener('selectionchange', () => {
+      visual = getSelection()?.isCollapsed === false;
+      render();
+    });
+
+    addEventListener('keydown', (event) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (command === null) {
+        if (event.key !== ':') return;
+        command = '';
+        message = '';
+      } else if (event.key === 'Escape') {
+        command = null;
+      } else if (event.key === 'Enter') {
+        if (command) run(command);
+        command = null;
+      } else if (event.key === 'Backspace') {
+        // Like vim, backspace on an empty command line leaves it
+        command = command ? command.slice(0, -1) : null;
+      } else if (event.key.length === 1) {
+        command += event.key;
+      } else {
+        return;
+      }
+      // Keeps space from scrolling and Enter from following a focused link while typing a command
+      event.preventDefault();
+      render();
     });
 
     // The window's frame, copied out of the live computed style so it can be animated from.
@@ -105,7 +163,8 @@ const { path, file } = Astro.props;
     --gutter: clamp(16px, 8vw - 32px, 64px);
     width: min(1040px, 100% - 2 * var(--gutter));
     margin: 72px auto;
-    overflow: hidden;
+    /* clip, not hidden. hidden would make the window a scroll container and stop the status bar from sticking */
+    overflow: clip;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 14px;
@@ -214,7 +273,7 @@ const { path, file } = Astro.props;
   }
 
   .content {
-    overflow: hidden;
+    overflow: clip;
   }
 
   .maximized .content {
@@ -255,7 +314,10 @@ const { path, file } = Astro.props;
     color: var(--lavender);
   }
 
+  /* Stays at the bottom of the screen, like vim's, so the command line can be seen from anywhere on the page */
   .status {
+    position: sticky;
+    bottom: 0;
     display: flex;
     border-top: 1px solid var(--line);
   }
@@ -270,13 +332,24 @@ const { path, file } = Astro.props;
     font-weight: 700;
   }
 
-  .status .mode.visual {
+  .status .mode[data-mode='visual'] {
     background: var(--lavender);
   }
 
-  .status .spacer {
+  .status .mode[data-mode='command'] {
+    background: var(--peach);
+  }
+
+  .status .cmdline {
     flex: 1;
-    padding: 0;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .status .cmdline.error {
+    color: var(--pink);
   }
 
   @media (max-width: 600px) {
