@@ -37,7 +37,6 @@ const { path, file } = Astro.props;
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const ease = 'cubic-bezier(0.32, 0.72, 0, 1)';
 
-  // Quit commands as vim spells them, with an optional ! to force
   const quit = /^(q|quit|wq|x|qa|wqa)(!?)$/;
 
   for (const win of document.querySelectorAll<HTMLElement>('.window')) {
@@ -46,18 +45,15 @@ const { path, file } = Astro.props;
     const mode = win.querySelector<HTMLElement>('.mode')!;
     const cmdline = win.querySelector<HTMLElement>('.cmdline')!;
 
-    // The window refuses to close and shakes instead, like a rejected macOS login
     const shake = (offsets: number[], duration: number) => {
       if (reducedMotion.matches) return;
       win.animate({ translate: offsets.map((x) => `${x}px`) }, duration);
     };
     const shakeNo = () => shake([0, -10, 10, -8, 8, -4, 4, 0], 450);
-    // For :q!, wider and twice as many swings, each one quicker
     const shakeHard = () => shake([0, -24, 24, -22, 22, -18, 18, -14, 14, -10, 10, -6, 6, 0], 500);
 
     close.addEventListener('click', shakeNo);
 
-    // The status bar plays vim: VISUAL while text is selected, and a : command line that refuses to quit
     let visual = false;
     let command: string | null = null;
     let message = '';
@@ -102,21 +98,16 @@ const { path, file } = Astro.props;
         if (command) run(command);
         command = null;
       } else if (event.key === 'Backspace') {
-        // Like vim, backspace on an empty command line leaves it
         command = command ? command.slice(0, -1) : null;
       } else if (event.key.length === 1) {
         command += event.key;
       } else {
         return;
       }
-      // Keeps space from scrolling and Enter from following a focused link while typing a command
       event.preventDefault();
       render();
     });
 
-    // The window's frame, copied out of the live computed style so it can be animated from.
-    // Height counts only the part on screen. Over a long page's full height the visible change would be over in a blink.
-    // min-height stays 0 during the animation so the maximized 100dvh doesn't override the animated height.
     const frame = () => {
       const { width, marginTop, marginBottom, borderRadius, boxShadow } = getComputedStyle(win);
       const { top, height } = win.getBoundingClientRect();
@@ -124,33 +115,32 @@ const { path, file } = Astro.props;
       return { width, marginTop, marginBottom, borderRadius, boxShadow, height: onScreen, minHeight: '0px' };
     };
 
-    // Change the window's classes, then animate its frame from the old state to the new one
     const morph = (change: () => void) => {
       const from = frame();
+      const contentHeight = `${content.offsetHeight}px`;
       change();
-      if (!reducedMotion.matches) win.animate([from, frame()], { duration: 400, easing: ease });
+      if (reducedMotion.matches) return;
+      const options = { duration: 400, easing: ease };
+      win.animate([from, frame()], options);
+      if (win.classList.contains('shaded')) content.animate({ height: [contentHeight, contentHeight] }, options);
     };
 
-    // Window shade: roll the window up into its title bar, or back down
     const setShaded = (shaded: boolean) => {
       win.classList.toggle('shaded', shaded);
-      // Keeps Tab from landing on links hidden in the rolled-up window
       content.inert = shaded;
     };
 
     minimize.addEventListener('click', () => morph(() => setShaded(!win.classList.contains('shaded'))));
 
-    // Maximize: fill the screen like the phone layout, and back on the next click.
-    // A rolled-up window unrolls and maximizes, whatever its size was.
     const toggleMaximize = () =>
       morph(() => {
-        win.classList.toggle('maximized', win.classList.contains('shaded') || !win.classList.contains('maximized'));
+        const rolledUp = win.classList.contains('shaded');
+        win.classList.toggle('maximized', rolledUp || !win.classList.contains('maximized'));
         setShaded(false);
       });
 
     maximize.addEventListener('click', toggleMaximize);
 
-    // Double-clicking the title bar maximizes too, like on macOS. Not on the dots, which have their own clicks.
     win.querySelector('.bar')!.addEventListener('dblclick', (event) => {
       if (!(event.target as Element).closest('.dots')) toggleMaximize();
     });
@@ -185,7 +175,6 @@ const { path, file } = Astro.props;
     gap: 16px;
     padding: 12px 16px;
     border-bottom: 1px solid var(--line);
-    /* Double-clicking to maximize would otherwise select the title, and switch the status bar to VISUAL */
     user-select: none;
   }
 
@@ -262,12 +251,10 @@ const { path, file } = Astro.props;
     border: 0;
     border-radius: 0;
     box-shadow: none;
-    /* Column layout so the content stretches and the status bar sits at the bottom of the screen */
     display: flex;
     flex-direction: column;
   }
 
-  /* A rolled-up window shrinks to its title bar, even when maximized */
   .maximized:not(.shaded) {
     min-height: 100dvh;
   }
@@ -276,10 +263,9 @@ const { path, file } = Astro.props;
     overflow: clip;
   }
 
-  .maximized .content {
+  .maximized:not(.shaded) .content {
     display: flex;
     flex-direction: column;
-    /* flex-grow, not flex: 1. A zero flex-basis would ignore the rolled-up height: 0 */
     flex-grow: 1;
   }
 
@@ -314,7 +300,6 @@ const { path, file } = Astro.props;
     color: var(--lavender);
   }
 
-  /* Stays at the bottom of the screen, like vim's, so the command line can be seen from anywhere on the page */
   .status {
     position: sticky;
     bottom: 0;
