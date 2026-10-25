@@ -14,8 +14,13 @@ import Layout from '../layouts/Layout.astro';
       root.classList.add('typing');
       // A restored scroll position would leave ./hei.sh off-screen, and nothing would start
       history.scrollRestoration = 'manual';
-      // If the sequence script fails to load or throws during setup, show the page anyway
-      setTimeout(() => root.classList.contains('typing-started') || root.classList.remove('typing'), 3000);
+      // If the sequence script fails to load or throws during setup, show the page anyway, and tell
+      // Window.astro the sequence is over
+      setTimeout(() => {
+        if (root.classList.contains('typing-started')) return;
+        root.classList.remove('typing');
+        dispatchEvent(new Event('typed'));
+      }, 3000);
     }
   </script>
   <Window path="~">

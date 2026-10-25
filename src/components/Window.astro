@@ -22,7 +22,7 @@ const { path } = Astro.props;
       <slot />
     </main>
     <div class="status" aria-hidden="true">
-      <span class="mode">NORMAL</span>
+      <span class="mode" data-mode="normal">NORMAL</span>
       <!-- The window is zsh in a Neovim :terminal buffer, named term://{cwd}//{pid}:{cmd} -->
       <span>term://~//4242:zsh</span>
       <span class="cmdline"></span>
@@ -30,6 +30,15 @@ const { path } = Astro.props;
       <span class="hide-mobile">utf-8</span>
       <span class="hide-mobile">Ln 1, Col 1</span>
     </div>
+    <!-- While index.astro types its commands, the keys go to zsh, as in Neovim's terminal mode. Set
+    before first paint, so the label doesn't flash NORMAL -->
+    <script is:inline>
+      if (document.documentElement.classList.contains('typing')) {
+        const mode = document.querySelector('.window .mode');
+        mode.textContent = 'TERMINAL';
+        mode.dataset.mode = 'terminal';
+      }
+    </script>
   </div>
 </div>
 
@@ -54,8 +63,7 @@ const { path } = Astro.props;
   const shakeSoft = () => shake([0, -10, 10, -8, 8, -4, 4, 0], 450);
   const shakeHard = () => shake([0, -43, 39, -35, 31, -27, 24, -21, 18, -15, 12, -10, 8, -6, 4, -2, 0], 900);
 
-  // While index.astro types its commands, the keys go to zsh, as in Neovim's terminal mode
-  let mode: Mode = document.documentElement.classList.contains('typing') ? 'terminal' : 'normal';
+  let mode = modeLabel.dataset.mode as Mode;
   let line = '';
   let message = '';
 
@@ -81,14 +89,13 @@ const { path } = Astro.props;
     }
   };
 
-  render();
-
   close.addEventListener('click', () => {
     run('q');
     render();
   });
 
   document.addEventListener('selectionchange', () => {
+    // The command line keeps its mode, and in terminal mode only a selection changes it
     if (mode === 'command' || (mode === 'terminal' && selectionMode() === 'normal')) return;
     mode = selectionMode();
     render();
