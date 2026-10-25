@@ -2,10 +2,9 @@
 interface Props {
   // The path the title bar shows, as in steffen@tommeras: ~
   path: string;
-  file: string;
 }
 
-const { path, file } = Astro.props;
+const { path } = Astro.props;
 ---
 
 <div class="window">
@@ -16,7 +15,7 @@ const { path, file } = Astro.props;
       <i></i>
     </span>
     <span class="bar-title">steffen@tommeras: {path}</span>
-    <span class="bar-right">zsh</span>
+    <span class="bar-right">nvim</span>
   </div>
   <div class="content">
     <main>
@@ -24,11 +23,12 @@ const { path, file } = Astro.props;
     </main>
     <div class="status" aria-hidden="true">
       <span class="mode">NORMAL</span>
-      <span>{file}</span>
+      <!-- The window is zsh in a Neovim :terminal buffer, named term://{cwd}//{pid}:{cmd} -->
+      <span>term://~//4242:zsh</span>
       <span class="cmdline"></span>
       <span class="hide-mobile">nb_NO</span>
       <span class="hide-mobile">utf-8</span>
-      <span>Ln 1, Col 1</span>
+      <span class="hide-mobile">Ln 1, Col 1</span>
     </div>
   </div>
 </div>
@@ -76,7 +76,7 @@ const { path, file } = Astro.props;
       message = 'Godt forsøk.';
     } else {
       shakeSoft();
-      message = 'E37: Ingen skriving siden siste endring (legg til ! for å overstyre)';
+      message = 'E948: Jobben kjører fortsatt (legg til ! for å avslutte jobben)';
     }
   };
 

@@ -8,7 +8,7 @@ const path = '~/prosjekter/proof';
 ---
 
 <Layout title="Proof | Tømmerås" description="Proof er en cocktaillogg med versjonshistorikk inspirert av git.">
-  <Window path={path} file="README.md">
+  <Window path={path}>
     <!-- The cd that the proof/ link on the home page stands for -->
     <Prompt command="cd prosjekter/proof" />
     <Prompt path={path} command="cat README.md" />
