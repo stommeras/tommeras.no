@@ -1,4 +1,6 @@
 ---
+import Cursor from './Cursor.astro';
+
 interface Props {
   command?: string;
   path?: string;
@@ -29,7 +31,7 @@ const { command, path = '~', href, comment } = Astro.props;
     ) : (
       <span class="cmd">{command}</span>
     ))}
-  <span class="cursor" />
+  <Cursor />
 </p>
 
 <style>
@@ -54,31 +56,8 @@ const { command, path = '~', href, comment } = Astro.props;
     color: var(--muted);
   }
 
-  .cursor {
-    display: none;
-  }
-
   /* .current shows the cursor on the prompt that waits for or types its command */
-  .idle .cursor,
-  :global(.current) .cursor,
-  .prompt:has(a:hover, a:focus-visible) .cursor {
-    display: inline-block;
-    width: 0.55em;
-    height: 1.1em;
-    vertical-align: -0.2em;
-    background: var(--mint);
-    animation: blink 1s steps(1) infinite;
-  }
-
-  @keyframes blink {
-    50% {
-      opacity: 0;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .cursor {
-      animation: none;
-    }
+  .prompt:not(.idle, .current, :has(a:hover, a:focus-visible)) :global(.cursor) {
+    display: none;
   }
 </style>
