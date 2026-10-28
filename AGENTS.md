@@ -13,7 +13,7 @@ Steffen Tømmerås' personal site: one static Astro page, deployed by Vercel fro
 
 ## Lab
 
-The lab is a separate site at [lab.tommeras.no](https://lab.tommeras.no), in its own repo (`stommeras/lab.tommeras.no`). Build experiments there, not here. It copies the color tokens from `src/layouts/Layout.astro`, so a token change here needs the same change in the lab. This site gets a link to the lab once the lab has experiments.
+The lab is a separate site at [lab.tommeras.no](https://lab.tommeras.no), in its own repo (`stommeras/lab.tommeras.no`). Build experiments there, not here. It copies the color tokens from `src/layouts/Layout.astro`, so a token change here needs the same change in the lab. This site links to the lab from the `lab` row in `ls -la prosjekter/` on the home page.
 
 ## Waiting for the owner
 
