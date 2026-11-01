@@ -21,10 +21,11 @@ const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tøm
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <Font cssVariable="--font-mono" preload={[{ style: 'normal' }, { weight: 400, style: 'italic' }]} />
     <title>{title}</title>
-    <Analytics />
   </head>
   <body>
     <slot />
+    <!-- In <head>, its custom element would end the head early and push the CSP <meta> into <body>, where browsers ignore it -->
+    <Analytics />
   </body>
 </html>
 
