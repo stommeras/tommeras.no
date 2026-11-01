@@ -8,7 +8,7 @@ Steffen Tømmerås' personal site: one static Astro page, deployed by Vercel fro
 - Keep it minimal: plain CSS in component `<style>` blocks, colors from the `light-dark()` tokens in `src/layouts/Layout.astro`, icons as inline SVG with `aria-hidden="true"`. Add a dependency only when a few lines of code can't do the job, and say why.
 - Write all visitor-facing text in Norwegian bokmål.
 - Every animation honors `prefers-reduced-motion`.
-- `security.csp` in `astro.config.mjs` hashes Astro's processed scripts and styles into a CSP `<meta>`, but it doesn't hash `is:inline` scripts. A script that has to run before first paint goes in `public/scripts/` and loads with `<script is:inline src>`. `vercel.json` sends `frame-ancestors` and the other directives a `<meta>` can't carry.
+- `security.csp` in `astro.config.mjs` puts a hash of every inline script and style in a CSP `<meta>`. `astro.config.mjs` hashes `<script is:inline>` blocks from source itself, so write them as exactly `<script is:inline>` without other attributes. `vercel.json` sends `frame-ancestors` and the other directives a `<meta>` can't carry.
 - Work on a branch named `<type>/<short-description>` (for example `feat/typed-commands`) and merge to `main` through a pull request. Write commit messages as [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`), using the same types as the branch names.
 - The hero effects (title scramble, magic subtitle) and the typed command sequence in `index.astro` are the site's signature. Change their behaviour only when asked.
 

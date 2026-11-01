@@ -34,7 +34,13 @@ const { path } = Astro.props;
     </div>
     <!-- While index.astro types its commands, the keys go to zsh, as in Neovim's terminal mode. Set
     before first paint, so the label doesn't flash NORMAL -->
-    <script is:inline src="/scripts/window-mode.js"></script>
+    <script is:inline>
+      if (document.documentElement.classList.contains('typing')) {
+        const mode = document.querySelector('.window .mode');
+        mode.textContent = 'TERMINAL';
+        mode.dataset.mode = 'terminal';
+      }
+    </script>
   </div>
 </div>
 
