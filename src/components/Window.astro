@@ -63,7 +63,7 @@ const { path } = Astro.props;
 <script>
   import { absolute, items, label, resolve, rowKey, type Item, type Text } from '../fs';
   import { setUpHero } from '../hero';
-  import { add, expand, step } from '../history';
+  import { add, draftPosition, expand, step } from '../history';
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const ease = 'cubic-bezier(0.32, 0.72, 0, 1)';
@@ -154,10 +154,7 @@ const { path } = Astro.props;
   const scrollToPrompt = () =>
     prompt.scrollIntoView({ block: 'nearest', behavior: reducedMotion.matches ? 'instant' : 'smooth' });
 
-  // History follows the visitor between pages. Each page adds the commands it ran on load, and a click on a linked
-  // command adds that command, since the click runs it.
   let commandHistory: string[] = [];
-  // The position Up and Down have stepped to, and the line they stepped away from
   let historyAt = 0;
   let draft = '';
   const remember = (command: string) => {
@@ -166,18 +163,18 @@ const { path } = Astro.props;
       sessionStorage.setItem('history', JSON.stringify(commandHistory));
     } catch {}
   };
-  const loadHistory = () => {
+  const loadHistoryAndPageCommands = () => {
     try {
       commandHistory = JSON.parse(sessionStorage.getItem('history') ?? '[]');
     } catch {}
     for (const cmd of win.querySelectorAll<HTMLElement>('main span.cmd')) remember(cmd.dataset.command!);
-    historyAt = commandHistory.length;
+    historyAt = draftPosition(commandHistory);
     draft = '';
   };
-  loadHistory();
+  loadHistoryAndPageCommands();
   // Back and Forward restore a page without running its script, so it picks up what other pages added since
   addEventListener('pageshow', (event) => {
-    if (event.persisted) loadHistory();
+    if (event.persisted) loadHistoryAndPageCommands();
   });
   for (const link of win.querySelectorAll<HTMLElement>('main a.cmd')) {
     link.addEventListener('click', (event) => {
@@ -364,7 +361,6 @@ const { path } = Astro.props;
     exit,
   };
 
-  // A command line moves into the log as typed, without the cursor or the input
   const echo = (text: string) => {
     const copy = prompt.cloneNode(true) as HTMLElement;
     copy.querySelector('.field')!.remove();
@@ -386,7 +382,7 @@ const { path } = Astro.props;
 
   const newLine = () => {
     field.value = '';
-    historyAt = commandHistory.length;
+    historyAt = draftPosition(commandHistory);
     draft = '';
     render();
   };
@@ -414,7 +410,6 @@ const { path } = Astro.props;
       : name.includes('/')
         ? exec(name)
         : (commands[name]?.(args) ?? [line(`zsh: kommando ikke funnet: ${name}`)]);
-    // Like zsh, an expanded !! or !n prints the command it became before running it
     printEntry(echo(typed), ...(expanded ? [line(command)] : []), ...output);
   };
 
@@ -430,16 +425,16 @@ const { path } = Astro.props;
     const modified = event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
     const ctrl = event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey;
     const key = event.key.toLowerCase();
+    const nothingSelected = field.selectionStart === field.selectionEnd && !getSelection()?.toString();
     if (event.key === 'Enter') {
       run();
     } else if (!modified && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
-      if (historyAt === commandHistory.length) draft = field.value;
+      if (historyAt === draftPosition(commandHistory)) draft = field.value;
       historyAt = step(commandHistory, historyAt, event.key === 'ArrowUp' ? -1 : 1);
       field.value = commandHistory[historyAt] ?? draft;
       field.setSelectionRange(field.value.length, field.value.length);
       render();
-    } else if (ctrl && key === 'c' && field.selectionStart === field.selectionEnd && !getSelection()?.toString()) {
-      // With text selected, Ctrl+C copies as usual
+    } else if (ctrl && key === 'c' && nothingSelected) {
       printEntry(echo(`${field.value}^C`));
       newLine();
     } else if (ctrl && key === 'l') {

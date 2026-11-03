@@ -9,7 +9,6 @@ test('add keeps commands in order and skips empty lines and repeats of the last 
 
 test('step stops at the oldest entry and comes back to the draft after the newest', () => {
   const entries = ['ls', 'pwd'];
-  // Position 2, one past the newest entry, is the line being typed
   expect(step(entries, 2, -1)).toBe(1);
   expect(step(entries, 0, -1)).toBe(0);
   expect(step(entries, 1, 1)).toBe(2);
