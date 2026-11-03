@@ -24,15 +24,10 @@ const { path } = Astro.props;
       <slot />
     </main>
     <div class="status" aria-hidden="true">
-      <span class="mode" data-mode="normal">
-        NORMAL
-      </span>
+      <span class="mode" data-mode="normal">NORMAL</span>
       <!-- The window is zsh in a Neovim :terminal buffer, named term://{cwd}//{pid}:{cmd} -->
       <span>term://~//4242:zsh</span>
-      <span class="cmdline">
-        <span class="cmdline-text"></span>
-        <Cursor />
-      </span>
+      <span class="cmdline"><span class="cmdline-text"></span><Cursor /></span>
       <span class="hide-mobile">nb_NO</span>
       <span class="hide-mobile">utf-8</span>
       <span class="hide-mobile">Ln 1, Col 1</span>
