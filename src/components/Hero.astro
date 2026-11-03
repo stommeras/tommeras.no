@@ -1,6 +1,5 @@
 ---
 interface Props {
-  // A copy that ./hei.sh prints at the prompt. Its title is a <p>, so the page keeps a single <h1>.
   copy?: boolean;
 }
 
@@ -41,61 +40,17 @@ const Title = copy ? 'p' : 'h1';
 </header>
 
 <script>
-  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  import { setUpHero } from '../hero';
 
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ';
-  const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
-
-  // Sets up one hero, the page's own or a copy ./hei.sh printed at the prompt, and returns its scramble
-  function init(hero: Element) {
-    const name = hero.querySelector<HTMLElement>('.name')!;
-    const target = name.querySelector<HTMLElement>('[data-value]')!;
-    const value = target.dataset.value!;
-    let interval: number | undefined;
-
-    function scramble() {
-      if (reducedMotion) return;
-      let iteration = 0;
-      clearInterval(interval);
-      interval = setInterval(() => {
-        target.textContent = [...value]
-          .map((letter, index) => (index < iteration ? letter : letters[Math.floor(Math.random() * letters.length)]))
-          .join('');
-        if (iteration >= value.length) clearInterval(interval);
-        iteration += 1 / 3;
-      }, 30);
-    }
-
-    name.addEventListener('pointerenter', scramble);
-
-    for (const [i, star] of hero.querySelectorAll<HTMLElement>('.star').entries()) {
-      const move = () => {
-        star.style.left = `${rand(-10, 100)}%`;
-        star.style.top = `${rand(-40, 80)}%`;
-        star.style.rotate = `${rand(0, 360)}deg`;
-      };
-      move();
-      star.addEventListener('animationiteration', move);
-      star.style.animationDelay = `calc(var(--pulse) * ${i} / 3)`;
-    }
-
-    return scramble;
-  }
-
-  // Only the home page has a hero of its own. Window.astro's template copy is inert and doesn't match.
-  const hero = document.querySelector('.hero');
-  if (hero) {
-    const scramble = init(hero);
-    // While the page types out its commands, the scramble waits until ./hei.sh has run
+  const pageHero = document.querySelector('.hero');
+  if (pageHero) {
+    const scramble = setUpHero(pageHero);
     if (document.documentElement.classList.contains('typing')) {
       addEventListener('hei', scramble, { once: true });
     } else {
       scramble();
     }
   }
-
-  // Window.astro sends this with the copy once ./hei.sh has printed it at the prompt
-  addEventListener('hero-copy', (event) => init((event as CustomEvent<Element>).detail)());
 </script>
 
 <style>
@@ -173,9 +128,6 @@ const Title = copy ? 'p' : 'h1';
     }
   }
 
-  /* When ./hei.sh runs, the title fades in under the scramble, and the subtitle follows as the
-     scramble settles (about 700 ms). The page's hero does it during the typed sequence, a copy at the
-     prompt as soon as it's printed. */
   @media (prefers-reduced-motion: no-preference) {
     :global(html.typing) .hero:global(.shown) .name,
     .copy .name {
