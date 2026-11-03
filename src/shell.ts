@@ -1,6 +1,5 @@
 import { absolute, homeDir, host, items, label, resolve, rowKey, user, type Item, type Text } from './fs';
 
-// A word is unquoted text and quoted parts side by side. A quote nobody closes runs to the end of the line.
 const words = /(?:[^\s"']+|"[^"]*"?|'[^']*'?)+/g;
 const parts = /[^"']+|"([^"]*)"?|'([^']*)'?/g;
 const variable = /\$([A-Za-z_]\w*)/g;
@@ -10,8 +9,8 @@ export const parse = (input: string, env: Record<string, string> = {}) =>
     const expanded = [...word.matchAll(parts)]
       .map(([part, double, single]) => single ?? (double ?? part).replace(variable, (_, name) => env[name] ?? ''))
       .join('');
-    // Like zsh, an unquoted word that expands to nothing is no word at all
-    return expanded || /["']/.test(word) ? [expanded] : [];
+    const quoted = /["']/.test(word);
+    return expanded || quoted ? [expanded] : [];
   });
 
 export const line = (text: string, className = 'output') => {
@@ -21,13 +20,10 @@ export const line = (text: string, className = 'output') => {
   return p;
 };
 
-// What the shell needs from the window around it
 export interface Terminal {
   cwd: string;
-  // The page's own path, like /prosjekter
-  page: string;
-  // Every ls -l row, and the hero ./hei.sh prints
-  rows: DocumentFragment;
+  pagePath: string;
+  lsRows: DocumentFragment;
   heroCopy: DocumentFragment;
   history: () => string[];
   changeDirectory: (path: string) => void;
@@ -91,7 +87,7 @@ export const createShell = (terminal: Terminal) => {
 
   const env = () => ({ USER: user, HOME: homeDir, PWD: absolute(cwd), SHELL: '/bin/zsh' });
 
-  const row = (path: string) => terminal.rows.querySelector(`[data-path="${CSS.escape(path)}"]`)!.cloneNode(true);
+  const row = (path: string) => terminal.lsRows.querySelector(`[data-path="${CSS.escape(path)}"]`)!.cloneNode(true);
   const list = (paths: string[]) => {
     const ul = document.createElement('ul');
     ul.append(...paths.map(row));
@@ -100,7 +96,6 @@ export const createShell = (terminal: Terminal) => {
 
   const text = ({ title, body }: Text) => [...(title ? [line(`# ${title}`, 'title')] : []), line(body, 'text')];
 
-  // ls without -l prints just the names, each linked where the long listing links it
   const names = (entries: { item: Item; self: boolean }[]) => {
     const p = line('', 'output names');
     for (const { item, self } of entries) {
@@ -118,7 +113,6 @@ export const createShell = (terminal: Terminal) => {
     return item ? { path: path!, item } : undefined;
   };
 
-  // The error messages follow GNU ls and cat and zsh's cd, translated the way nb_NO translates them
   const missing = 'Ingen slik fil eller filkatalog';
 
   const ls = (args: string[]) => {
@@ -146,15 +140,12 @@ export const createShell = (terminal: Terminal) => {
     });
   };
 
-  // head prints the same as cat, since every file is shorter than head's ten lines. Without a file, real cat
-  // waits for input, so here it prints nothing.
-  const cat = (command: string) => (args: string[]) => {
+  const printFiles = (command: string) => (args: string[]) => {
     return args.flatMap((arg): Element[] => {
       const found = find(arg);
       if (!found) return [line(`${command}: ${arg}: ${missing}`)];
       const { path, item } = found;
       if (item.kind === 'dir') return [line(`${command}: ${arg}: Er en filkatalog`)];
-      // Links and the mail address have no text, so they print the row to click instead
       return item.text ? text(item.text) : [list([path])];
     });
   };
@@ -168,8 +159,7 @@ export const createShell = (terminal: Terminal) => {
       return [];
     }
     if (item.kind !== 'dir') return [line(`cd: ikke en filkatalog: ${arg}`)];
-    // A directory with a page opens it. One without, like kontakt, changes directory on this page.
-    if (item.href && item.href !== terminal.page) {
+    if (item.href && item.href !== terminal.pagePath) {
       location.assign(item.href);
       return [];
     }
@@ -182,8 +172,7 @@ export const createShell = (terminal: Terminal) => {
     if (!arg) return [line('open: mangler operand')];
     const href = find(arg)?.item.href;
     if (!href) return [line(`open: kan ikke åpne ${arg}`)];
-    // Like cd, opening the page you're on keeps it instead of reloading it
-    if (href !== terminal.page) location.assign(href);
+    if (href !== terminal.pagePath) location.assign(href);
     return [];
   };
 
@@ -273,7 +262,6 @@ export const createShell = (terminal: Terminal) => {
       swatches.append(swatch);
     }
 
-    // A logo would go in a column before the info
     const layout = document.createElement('div');
     layout.className = 'fetch';
     const column = document.createElement('div');
@@ -293,7 +281,6 @@ export const createShell = (terminal: Terminal) => {
     return [box];
   };
 
-  // Like zsh, the first exit warns about running jobs and an exit right after it goes through
   let warnedAboutJobs = false;
 
   const exit = () => {
@@ -318,8 +305,8 @@ export const createShell = (terminal: Terminal) => {
 
   const commands: Record<string, (args: string[]) => Element[]> = {
     ls,
-    cat: cat('cat'),
-    head: cat('head'),
+    cat: printFiles('cat'),
+    head: printFiles('head'),
     cd,
     open,
     pwd: () => [line(absolute(cwd))],
@@ -354,7 +341,6 @@ export const createShell = (terminal: Terminal) => {
   return {
     parse: (command: string) => parse(command, env()),
     run: (name: string | undefined, args: string[]) => {
-      // An empty line keeps the warning, so exit, Enter, exit still goes through
       if (name && name !== 'exit') warnedAboutJobs = false;
       if (!name) return [];
       if (name.includes('/')) return exec(name);

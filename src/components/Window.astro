@@ -5,7 +5,6 @@ import Hero from './Hero.astro';
 import Prompt from './Prompt.astro';
 
 interface Props {
-  // The path the title bar shows, as in gjest@tommeras: ~
   path: string;
 }
 
@@ -184,8 +183,8 @@ const { path } = Astro.props;
 
   const shell = createShell({
     cwd: win.dataset.path!,
-    page: location.pathname.replace(/\/+$/, '') || '/',
-    rows: win.querySelector<HTMLTemplateElement>('template.rows')!.content,
+    pagePath: location.pathname.replace(/\/+$/, '') || '/',
+    lsRows: win.querySelector<HTMLTemplateElement>('template.rows')!.content,
     heroCopy: win.querySelector<HTMLTemplateElement>('template.hero-copy')!.content,
     history: () => commandHistory,
     changeDirectory: (path) => {
@@ -604,7 +603,6 @@ const { path } = Astro.props;
     height: 1.25em;
   }
 
-  /* The train starts past the right edge of the terminal and leaves past the left */
   .prompt-end :global(.sl) {
     container-type: inline-size;
     overflow: clip;
