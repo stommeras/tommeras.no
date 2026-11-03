@@ -48,9 +48,11 @@ const { command, path = '~', href, comment } = Astro.props;
     color: var(--mint);
   }
 
-  /* inline-block keeps the link's underline off the comment, so only the command looks like the link */
+  /* inline-block keeps the link's underline off the comment, so only the command looks like the link.
+     With the cursor's cell before it, the margin leaves two cells between command and comment. */
   .comment {
     display: inline-block;
+    margin-left: 1ch;
     color: var(--muted);
   }
 
@@ -59,7 +61,7 @@ const { command, path = '~', href, comment } = Astro.props;
     display: none;
   }
 
-  /* A linked command shows its cursor on hover, on the cell between the command and its comment, like
+  /* A linked command shows its cursor on hover, in the first cell after the command, like
      a shell cursor before a zsh autosuggestion. It stays in the layout, so the comment doesn't move. */
   a.cmd > :global(.cursor) {
     width: 1ch;
