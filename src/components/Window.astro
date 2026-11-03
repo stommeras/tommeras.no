@@ -307,7 +307,10 @@ const { path } = Astro.props;
       return;
     }
     const output = !name ? [] : (commands[name]?.(args) ?? [line(`zsh: kommando ikke funnet: ${name}`)]);
-    history.append(echo, ...output);
+    const entry = document.createElement('div');
+    entry.className = 'entry';
+    entry.append(echo, ...output);
+    history.append(entry);
   };
 
   field.addEventListener('input', () => {
@@ -335,11 +338,26 @@ const { path } = Astro.props;
     scrollToPrompt();
   };
 
+  // A click in the terminal focuses the prompt too, unless it lands on something that takes focus itself or ends
+  // a text selection. On a touchscreen only a tap at the end of the page does, so reading doesn't open the keyboard.
+  const onClick = (event: MouseEvent) => {
+    const target = event.target as Element;
+    if (target.closest('a, button, input, textarea, select, summary, [tabindex]')) return;
+    if (!getSelection()?.isCollapsed) return;
+    if ((event as PointerEvent).pointerType === 'touch' && !target.closest('.prompt-end')) return;
+    field.focus({ preventScroll: true });
+  };
+
+  const listen = () => {
+    addEventListener('keydown', onKeydown);
+    content.addEventListener('click', onClick);
+  };
+
   // A listener added while index.astro's skip key is dispatching doesn't receive that key
   if (document.documentElement.classList.contains('typing')) {
-    addEventListener('typed', () => addEventListener('keydown', onKeydown), { once: true });
+    addEventListener('typed', listen, { once: true });
   } else {
-    addEventListener('keydown', onKeydown);
+    listen();
   }
 
   const isShaded = () => win.classList.contains('shaded');
@@ -583,6 +601,11 @@ const { path } = Astro.props;
     font-size: 16px;
     opacity: 0;
     cursor: text;
+  }
+
+  /* Air between a command's output and the next prompt. A command without output gets none, like in a terminal. */
+  .prompt-end :global(.entry:has(> :nth-child(2))) {
+    margin-bottom: 16px;
   }
 
   .prompt-end :global(.output) {
