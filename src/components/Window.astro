@@ -209,6 +209,16 @@ const { path } = Astro.props;
     view-transition-name: bar;
   }
 
+  @media (prefers-reduced-motion: no-preference) {
+    @view-transition {
+      navigation: auto;
+    }
+
+    :global(::view-transition-group(*)) {
+      animation-duration: 150ms;
+    }
+  }
+
   .dots {
     display: flex;
     gap: 8px;

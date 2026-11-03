@@ -139,18 +139,6 @@ const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tøm
     }
   }
 
-  /* A cd swaps the window's contents like a terminal that stays open. The title bar is its own
-     view-transition-name in Window.astro, so it holds still while the rest fades */
-  @media (prefers-reduced-motion: no-preference) {
-    @view-transition {
-      navigation: auto;
-    }
-
-    ::view-transition-group(*) {
-      animation-duration: 150ms;
-    }
-  }
-
   /* The spotlight still follows the pointer, just without trailing behind it */
   @media (prefers-reduced-motion: reduce) {
     :root {
