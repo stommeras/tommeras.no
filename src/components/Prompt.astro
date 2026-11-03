@@ -24,13 +24,15 @@ const { command, path = '~', href, comment } = Astro.props;
   </span>{' '}
   {command &&
     (href ? (
-      <a class="cmd" href={href}>
+      <a class="cmd" href={href} data-command={command}>
         {command}
         <Cursor />
         {comment && <span class="comment"># {comment}</span>}
       </a>
     ) : (
-      <span class="cmd">{command}</span>
+      <span class="cmd" data-command={command}>
+        {command}
+      </span>
     ))}
   {!href && <Cursor />}
 </p>
