@@ -156,25 +156,34 @@ const { path } = Astro.props;
 
   // History follows the visitor between pages. Each page adds the commands it ran on load, and a click on a linked
   // command adds that command, since the click runs it.
-  let entries: string[] = [];
-  try {
-    entries = JSON.parse(sessionStorage.getItem('history') ?? '[]');
-  } catch {}
+  let commandHistory: string[] = [];
+  // The position Up and Down have stepped to, and the line they stepped away from
+  let historyAt = 0;
+  let draft = '';
   const remember = (command: string) => {
-    entries = add(entries, command);
+    commandHistory = add(commandHistory, command);
     try {
-      sessionStorage.setItem('history', JSON.stringify(entries));
+      sessionStorage.setItem('history', JSON.stringify(commandHistory));
     } catch {}
   };
-  for (const cmd of win.querySelectorAll<HTMLElement>('main span.cmd')) remember(cmd.dataset.command!);
+  const loadHistory = () => {
+    try {
+      commandHistory = JSON.parse(sessionStorage.getItem('history') ?? '[]');
+    } catch {}
+    for (const cmd of win.querySelectorAll<HTMLElement>('main span.cmd')) remember(cmd.dataset.command!);
+    historyAt = commandHistory.length;
+    draft = '';
+  };
+  loadHistory();
+  // Back and Forward restore a page without running its script, so it picks up what other pages added since
+  addEventListener('pageshow', (event) => {
+    if (event.persisted) loadHistory();
+  });
   for (const link of win.querySelectorAll<HTMLElement>('main a.cmd')) {
     link.addEventListener('click', (event) => {
       if (event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey) remember(link.dataset.command!);
     });
   }
-  // The position Up and Down have stepped to, and the line they stepped away from
-  let at = entries.length;
-  let draft = '';
 
   let cwd = win.dataset.path!;
   const page = location.pathname.replace(/\/+$/, '') || '/';
@@ -349,7 +358,7 @@ const { path } = Astro.props;
     sh: sh('sh'),
     bash: sh('bash'),
     history: () => [
-      line(entries.map((command, i) => `${String(i + 1).padStart(5)}  ${command}`).join('\n'), 'output pre'),
+      line(commandHistory.map((command, i) => `${String(i + 1).padStart(5)}  ${command}`).join('\n'), 'output pre'),
     ],
     help,
     exit,
@@ -367,7 +376,7 @@ const { path } = Astro.props;
     return copy;
   };
 
-  const print = (...elements: Element[]) => {
+  const printEntry = (...elements: Element[]) => {
     const entry = document.createElement('div');
     entry.className = 'entry';
     entry.append(...elements);
@@ -377,17 +386,17 @@ const { path } = Astro.props;
 
   const newLine = () => {
     field.value = '';
-    at = entries.length;
+    historyAt = commandHistory.length;
     draft = '';
     render();
   };
 
   const run = () => {
     const typed = field.value;
-    const expansion = expand(entries, typed);
+    const expansion = expand(commandHistory, typed);
     if ('missing' in expansion) {
       newLine();
-      print(echo(typed), line(`zsh: ingen slik hendelse: ${expansion.missing}`));
+      printEntry(echo(typed), line(`zsh: ingen slik hendelse: ${expansion.missing}`));
       return;
     }
     const { command, expanded } = expansion;
@@ -406,7 +415,7 @@ const { path } = Astro.props;
         ? exec(name)
         : (commands[name]?.(args) ?? [line(`zsh: kommando ikke funnet: ${name}`)]);
     // Like zsh, an expanded !! or !n prints the command it became before running it
-    print(echo(typed), ...(expanded ? [line(command)] : []), ...output);
+    printEntry(echo(typed), ...(expanded ? [line(command)] : []), ...output);
   };
 
   field.addEventListener('input', () => {
@@ -418,19 +427,20 @@ const { path } = Astro.props;
   });
   field.addEventListener('keydown', (event) => {
     if (event.isComposing) return;
+    const modified = event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
     const ctrl = event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey;
     const key = event.key.toLowerCase();
     if (event.key === 'Enter') {
       run();
-    } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-      if (at === entries.length) draft = field.value;
-      at = step(entries, at, event.key === 'ArrowUp' ? -1 : 1);
-      field.value = entries[at] ?? draft;
+    } else if (!modified && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+      if (historyAt === commandHistory.length) draft = field.value;
+      historyAt = step(commandHistory, historyAt, event.key === 'ArrowUp' ? -1 : 1);
+      field.value = commandHistory[historyAt] ?? draft;
       field.setSelectionRange(field.value.length, field.value.length);
       render();
     } else if (ctrl && key === 'c' && field.selectionStart === field.selectionEnd && !getSelection()?.toString()) {
       // With text selected, Ctrl+C copies as usual
-      print(echo(`${field.value}^C`));
+      printEntry(echo(`${field.value}^C`));
       newLine();
     } else if (ctrl && key === 'l') {
       log.replaceChildren();

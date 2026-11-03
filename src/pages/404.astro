@@ -21,7 +21,8 @@ import Layout from '../layouts/Layout.astro';
     try {
       path = decodeURIComponent(path);
     } catch {}
-    document.querySelector('main .cmd').textContent = 'cd ' + path;
+    const cmd = document.querySelector('main .cmd');
+    cmd.textContent = cmd.dataset.command = 'cd ' + path;
     document.querySelector('.missing').textContent = path;
   </script>
 </Layout>
