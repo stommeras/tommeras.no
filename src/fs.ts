@@ -131,7 +131,9 @@ add('~', home);
 // For the pages, which only ask for paths that exist
 export const byPath = (path: string) => items.get(path)!;
 
-export const homeDir = '/home/steffen';
+// The visitor, whom the prompt runs as
+export const user = 'gjest';
+export const homeDir = `/home/${user}`;
 export const absolute = (path: string) => `${homeDir}${path.slice(1)}`;
 
 // Entry.astro marks each ls -l row with this key, and the prompt copies rows by it. The ./ row gets its own key.
