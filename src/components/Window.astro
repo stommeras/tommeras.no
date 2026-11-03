@@ -1,4 +1,6 @@
 ---
+import { items } from '../fs';
+import Entry from './Entry.astro';
 import Prompt from './Prompt.astro';
 
 interface Props {
@@ -9,7 +11,7 @@ interface Props {
 const { path } = Astro.props;
 ---
 
-<div class="window">
+<div class="window" data-path={path}>
   <div class="bar" aria-hidden="true">
     <span class="dots">
       <i></i>
@@ -36,13 +38,29 @@ const { path } = Astro.props;
     <main>
       <slot />
       <div class="prompt-end">
+        <div class="history" aria-live="polite"></div>
         <Prompt path={path} />
       </div>
     </main>
   </div>
+  <!-- Every ls -l row, which the prompt copies when it lists a directory -->
+  <template class="rows">
+    <ul>
+      {
+        [...items].map(([path, item]) => (
+          <>
+            <Entry item={item} path={path} />
+            {item.kind === 'dir' && <Entry item={item} path={path} self />}
+          </>
+        ))
+      }
+    </ul>
+  </template>
 </div>
 
 <script>
+  import { items, label, resolve, type Item, type Text } from '../fs';
+
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const ease = 'cubic-bezier(0.32, 0.72, 0, 1)';
 
@@ -50,9 +68,6 @@ const { path } = Astro.props;
   const win = document.querySelector<HTMLElement>('.window')!;
   const [close, minimize, maximize] = win.querySelectorAll('.dots i');
   const content = win.querySelector<HTMLElement>('.content')!;
-  const prompt = win.querySelector<HTMLElement>('.prompt-end .prompt')!;
-  const input = document.createElement('span');
-  prompt.querySelector('.cursor')!.before(input);
 
   const shake = (offsets: number[], duration: number) => {
     if (reducedMotion.matches) return;
@@ -61,53 +76,263 @@ const { path } = Astro.props;
   const shakeSoft = () => shake([0, -10, 10, -8, 8, -4, 4, 0], 450);
   const shakeHard = () => shake([0, -43, 39, -35, 31, -27, 24, -21, 18, -15, 12, -10, 8, -6, 4, -2, 0], 900);
 
+  close.addEventListener('click', shakeSoft);
+
+  // The title bar stays put between pages: it erases the previous path back to what the two share, then types
+  // the rest. The inline script above shows the previous path and keeps this page's in data-path. cd also types
+  // here when it changes directory without leaving the page.
+  const bar = win.querySelector<HTMLElement>('.bar-path')!;
+  let barPath = bar.dataset.path ?? bar.textContent!;
+  let barTimers: number[] = [];
+
+  const typeBar = (to: string) => {
+    barPath = to;
+    for (const timer of barTimers) clearTimeout(timer);
+    barTimers = [];
+    const from = bar.textContent!;
+    if (reducedMotion.matches) {
+      bar.textContent = to;
+      return;
+    }
+    let shared = 0;
+    while (shared < from.length && from[shared] === to[shared]) shared++;
+    const frames = [
+      ...Array.from({ length: from.length - shared }, (_, i) => from.slice(0, from.length - 1 - i)),
+      ...Array.from({ length: to.length - shared }, (_, i) => to.slice(0, shared + 1 + i)),
+    ];
+    let at = 0;
+    for (const [i, text] of frames.entries()) {
+      at += i < from.length - shared ? 20 : 45;
+      barTimers.push(setTimeout(() => (bar.textContent = text), at));
+    }
+  };
+
+  addEventListener('pagehide', () => {
+    try {
+      sessionStorage.setItem('bar-path', barPath);
+    } catch {}
+  });
+
+  if (bar.dataset.path) typeBar(bar.dataset.path);
+
+  // The prompt at the end of the page. A real input, invisible on top of it, takes the typing, so phones open
+  // their keyboard and paste, dead keys and the arrow keys work. The prompt shows the input's text with the
+  // block cursor on the character at the caret.
+  const history = win.querySelector<HTMLElement>('.prompt-end .history')!;
+  const prompt = win.querySelector<HTMLElement>('.prompt-end > .prompt')!;
+  const promptPath = prompt.querySelector('.path')!;
+  const cursor = prompt.querySelector<HTMLElement>('.cursor')!;
+  const before = document.createElement('span');
+  const after = document.createElement('span');
+  for (const span of [before, after]) {
+    span.className = 'typed';
+    span.setAttribute('aria-hidden', 'true');
+  }
+  cursor.before(before);
+  cursor.after(after);
+
+  const field = document.createElement('input');
+  field.className = 'field';
+  field.autocomplete = 'off';
+  field.spellcheck = false;
+  field.autocapitalize = 'none';
+  field.enterKeyHint = 'go';
+  field.setAttribute('aria-label', 'Terminal. Skriv help for å se kommandoene.');
+  // The input sits inside the prompt, so the prompt can't be hidden from screen readers. Its path and arrow are.
+  prompt.removeAttribute('aria-hidden');
+  prompt.append(field);
+
+  const render = () => {
+    const { value } = field;
+    const at = field.selectionStart ?? value.length;
+    before.textContent = value.slice(0, at);
+    cursor.textContent = value.slice(at, at + 1);
+    after.textContent = value.slice(at + 1);
+  };
+
+  const scrollToPrompt = () =>
+    prompt.scrollIntoView({ block: 'nearest', behavior: reducedMotion.matches ? 'instant' : 'smooth' });
+
+  let cwd = win.dataset.path!;
+  const page = location.pathname.replace(/\/+$/, '') || '/';
+
+  const line = (text: string, className = 'output') => {
+    const p = document.createElement('p');
+    p.className = className;
+    p.textContent = text;
+    return p;
+  };
+
+  const rows = win.querySelector<HTMLTemplateElement>('template.rows')!.content;
+  const row = (path: string) => rows.querySelector(`[data-path="${CSS.escape(path)}"]`)!.cloneNode(true);
+  const list = (paths: string[]) => {
+    const ul = document.createElement('ul');
+    ul.append(...paths.map(row));
+    return ul;
+  };
+
+  const text = ({ title, body }: Text) => [...(title ? [line(`# ${title}`, 'title')] : []), line(body, 'text')];
+
+  // ls without -l prints just the names, each linked where the long listing links it
+  const names = (entries: { item: Item; self: boolean }[]) => {
+    const p = line('', 'output names');
+    for (const { item, self } of entries) {
+      const name = document.createElement(item.href ? 'a' : 'span');
+      name.textContent = self ? './' : label(item);
+      if (item.href) (name as HTMLAnchorElement).href = item.href;
+      p.append(name);
+    }
+    return p;
+  };
+
+  const find = (arg: string) => {
+    const path = resolve(cwd, arg);
+    const item = path && items.get(path);
+    return item ? { path: path!, item } : undefined;
+  };
+
+  // The error messages follow GNU ls and cat and zsh's cd, translated the way nb_NO translates them
+  const missing = 'Ingen slik fil eller filkatalog';
+
+  const ls = (args: string[]) => {
+    const options = args.filter((arg) => arg.startsWith('-') && arg !== '-');
+    const flags = options.join('').replaceAll('-', '');
+    const invalid = [...flags].find((flag) => !'la'.includes(flag));
+    if (invalid) return [line(`ls: ugyldig valg -- '${invalid}'`)];
+    const paths = args.filter((arg) => !options.includes(arg));
+    const targets = paths.length ? paths : ['.'];
+    return targets.flatMap((arg): Element[] => {
+      const found = find(arg);
+      if (!found) return [line(`ls: får ikke tilgang til '${arg}': ${missing}`)];
+      const { path, item } = found;
+      const entries =
+        item.kind === 'dir'
+          ? [
+              ...(flags.includes('a') ? [{ path: `${path}/.`, item, self: true }] : []),
+              ...item.children!.map((child) => ({ path: `${path}/${child.name}`, item: child, self: false })),
+            ]
+          : [{ path, item, self: false }];
+      const output = flags.includes('l') ? list(entries.map((entry) => entry.path)) : names(entries);
+      return targets.length > 1 ? [line(`${arg}:`), output] : [output];
+    });
+  };
+
+  // head prints the same as cat, since every file is shorter than head's ten lines
+  const cat = (command: string) => (args: string[]) => {
+    if (!args.length) return [line(`${command}: mangler filnavn`)];
+    return args.flatMap((arg): Element[] => {
+      const found = find(arg);
+      if (!found) return [line(`${command}: ${arg}: ${missing}`)];
+      const { path, item } = found;
+      if (item.kind === 'dir') return [line(`${command}: ${arg}: Er en filkatalog`)];
+      // Links and the mail address have no text, so they print the row to click instead
+      return item.text ? text(item.text) : [list([path])];
+    });
+  };
+
+  const cd = ([arg = '~']: string[]) => {
+    const found = find(arg);
+    if (!found) return [line(`cd: ingen slik fil eller filkatalog: ${arg}`)];
+    const { path, item } = found;
+    if (item.kind === 'link') {
+      location.assign(item.href!);
+      return [];
+    }
+    if (item.kind !== 'dir') return [line(`cd: ikke en filkatalog: ${arg}`)];
+    // A directory with a page opens it. One without, like kontakt, changes directory on this page.
+    if (item.href && item.href !== page) {
+      location.assign(item.href);
+      return [];
+    }
+    cwd = path;
+    promptPath.textContent = path;
+    typeBar(path);
+    return [];
+  };
+
+  const help = () => [
+    line(
+      [
+        'ls [-la] [sti]  vis hva som ligger i en mappe',
+        'cat <fil>       skriv ut en fil',
+        'head <fil>      skriv ut starten av en fil',
+        'cd [sti]        gå til en mappe',
+        'pwd             vis hvor du er',
+        'clear           tøm skjermen',
+        'exit            avslutt',
+      ].join('\n'),
+      'output pre',
+    ),
+  ];
+
   // Like zsh, the first exit warns about running jobs and an exit right after it goes through
   let warnedAboutJobs = false;
 
-  const reply = (command: string) => {
-    const secondExit = command === 'exit' && warnedAboutJobs;
-    warnedAboutJobs = command === 'exit' && !secondExit;
-    if (secondExit) {
-      shakeHard();
-      return 'Godt forsøk.';
-    }
+  const exit = () => {
     if (warnedAboutJobs) {
-      shakeSoft();
-      return 'zsh: du har jobber som kjører.';
+      warnedAboutJobs = false;
+      shakeHard();
+      return [line('Godt forsøk.')];
     }
-    return `zsh: kommando ikke funnet: ${command.split(' ')[0]}`;
+    warnedAboutJobs = true;
+    shakeSoft();
+    return [line('zsh: du har jobber som kjører.')];
   };
 
-  const run = (command: string) => {
+  const commands: Record<string, (args: string[]) => Element[]> = {
+    ls,
+    cat: cat('cat'),
+    head: cat('head'),
+    cd,
+    pwd: () => [line(`/home/steffen${cwd.slice(1)}`)],
+    help,
+    exit,
+  };
+
+  const run = () => {
+    const [name, ...args] = field.value.trim().split(/\s+/);
+    // The command line moves into the history as typed, without the cursor or the input
     const echo = prompt.cloneNode(true) as HTMLElement;
+    echo.querySelector('.field')!.remove();
     echo.querySelector('.cursor')!.remove();
-    const output = document.createElement('p');
-    output.className = 'output';
-    output.textContent = reply(command);
-    prompt.before(echo, output);
-    input.textContent = '';
-  };
-
-  close.addEventListener('click', shakeSoft);
-
-  const onKeydown = (event: KeyboardEvent) => {
-    if (event.ctrlKey || event.metaKey || event.altKey) return;
-    const line = input.textContent!;
-    // Only a visible character starts a line, so Enter, Space and Tab keep working on the page until then
-    if (!line && (event.key.length !== 1 || event.key === ' ')) return;
-    if (event.key === 'Enter') {
-      run(line.trim());
-    } else if (event.key === 'Escape') {
-      input.textContent = '';
-    } else if (event.key === 'Backspace') {
-      input.textContent = line.slice(0, -1);
-    } else if (event.key.length === 1) {
-      input.textContent = line + event.key;
-    } else {
+    const [typed, rest] = echo.querySelectorAll('.typed');
+    typed.textContent = field.value;
+    rest.textContent = '';
+    echo.setAttribute('aria-hidden', 'true');
+    field.value = '';
+    render();
+    if (name !== 'exit') warnedAboutJobs = false;
+    if (name === 'clear') {
+      history.replaceChildren();
       return;
     }
+    const output = !name ? [] : (commands[name]?.(args) ?? [line(`zsh: kommando ikke funnet: ${name}`)]);
+    history.append(echo, ...output);
+  };
+
+  field.addEventListener('input', () => {
+    render();
+    scrollToPrompt();
+  });
+  document.addEventListener('selectionchange', () => {
+    if (document.activeElement === field) render();
+  });
+  field.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') run();
+    else if (event.key === 'Escape') field.value = '';
+    else return;
     event.preventDefault();
-    prompt.scrollIntoView({ block: 'nearest', behavior: reducedMotion.matches ? 'instant' : 'smooth' });
+    render();
+    scrollToPrompt();
+  });
+
+  // Typing anywhere on the page goes to the prompt. Only a visible character starts it, so Space, Enter and
+  // Tab keep working on the page.
+  const onKeydown = (event: KeyboardEvent) => {
+    if (event.ctrlKey || event.metaKey || event.altKey || document.activeElement !== document.body) return;
+    if ((event.key.length !== 1 && event.key !== 'Dead') || event.key === ' ') return;
+    field.focus({ preventScroll: true });
+    scrollToPrompt();
   };
 
   // A listener added while index.astro's skip key is dispatching doesn't receive that key
@@ -155,36 +380,6 @@ const { path } = Astro.props;
   win.querySelector('.bar')!.addEventListener('dblclick', (event) => {
     if (!(event.target as Element).closest('.dots')) toggleMaximize();
   });
-</script>
-
-<script>
-  // The title bar stays put between pages: it erases the previous path back to what the two share, then
-  // types the rest. The inline script above shows the previous path and keeps this page's in data-path.
-  const bar = document.querySelector<HTMLElement>('.bar-path')!;
-  const path = bar.dataset.path ?? bar.textContent!;
-  const eraseMs = 20;
-  const typeMs = 45;
-
-  addEventListener('pagehide', () => {
-    try {
-      sessionStorage.setItem('bar-path', path);
-    } catch {}
-  });
-
-  if (bar.dataset.path) {
-    const from = bar.textContent!;
-    let shared = 0;
-    while (from[shared] === path[shared]) shared++;
-    const frames = [
-      ...Array.from({ length: from.length - shared }, (_, i) => from.slice(0, from.length - 1 - i)),
-      ...Array.from({ length: path.length - shared }, (_, i) => path.slice(0, shared + 1 + i)),
-    ];
-    let at = 0;
-    for (const [i, text] of frames.entries()) {
-      at += i < from.length - shared ? eraseMs : typeMs;
-      setTimeout(() => (bar.textContent = text), at);
-    }
-  }
 </script>
 
 <style>
@@ -350,15 +545,74 @@ const { path } = Astro.props;
   }
 
   .prompt-end :global(.prompt) {
+    position: relative;
     scroll-margin-bottom: var(--end-padding);
     /* Wraps at the window edge whatever the character, like a terminal, instead of moving the command below the arrow */
     word-break: break-all;
+  }
+
+  /* Keeps runs of spaces, like a terminal */
+  .prompt-end :global(.typed) {
+    white-space: pre-wrap;
+  }
+
+  /* The block cursor over a character, with the character in the background color */
+  .prompt-end :global(.cursor:not(:empty)) {
+    height: auto;
+    line-height: 1.1;
+    vertical-align: baseline;
+    color: var(--surface);
+    white-space: pre;
+  }
+
+  /* An unfocused terminal shows an outlined, steady cursor */
+  .prompt-end > :global(.prompt:not(:focus-within) .cursor) {
+    background: none;
+    box-shadow: inset 0 0 0 1px var(--mint);
+    color: inherit;
+    animation: none;
+  }
+
+  /* Covers the prompt, so a tap anywhere on it focuses the input. 16px keeps iOS from zooming in. */
+  .prompt-end :global(.field) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    font-size: 16px;
+    opacity: 0;
+    cursor: text;
   }
 
   .prompt-end :global(.output) {
     margin: 0;
     font-size: 0.9375rem;
     overflow-wrap: anywhere;
+  }
+
+  .prompt-end :global(.pre) {
+    white-space: pre-wrap;
+  }
+
+  .prompt-end :global(.names) {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 2ch;
+  }
+
+  .prompt-end :global(.text) {
+    max-width: 64ch;
+    margin: 12px 0 0;
+    white-space: pre-line;
+  }
+
+  .prompt-end :global(ul) {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
   @media (max-width: 600px) {

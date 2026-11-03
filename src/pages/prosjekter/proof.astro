@@ -2,9 +2,11 @@
 import Prompt from '../../components/Prompt.astro';
 import Shots from '../../components/Shots.astro';
 import Window from '../../components/Window.astro';
+import { at } from '../../fs';
 import Layout from '../../layouts/Layout.astro';
 
 const path = '~/prosjekter/proof';
+const readme = at(`${path}/README.md`).text!;
 ---
 
 <Layout title="Proof | Tømmerås" description="Proof er en cocktaillogg med versjonshistorikk inspirert av git.">
@@ -13,13 +15,9 @@ const path = '~/prosjekter/proof';
     <Prompt command="cd prosjekter/proof" />
     <Prompt path={path} command="cat README.md" />
     <h1 class="title">
-      <span aria-hidden="true"># </span>Proof
+      <span aria-hidden="true"># </span>{readme.title}
     </h1>
-    <p>
-      En cocktaillogg med versjonshistorikk inspirert av git. Hver versjon av en oppskrift er en commit med
-      ingredienser, metode, garnityr og hva du syntes om drinken. Du kan lage en branch av en oppskrift eller flytte
-      HEAD tilbake til en eldre versjon uten at noe du har skrevet blir overskrevet.
-    </p>
+    <p>{readme.body}</p>
     <Shots label="Skjermbilder fra demoen">
       <img
         src="/prosjekter/proof-liste.jpg"

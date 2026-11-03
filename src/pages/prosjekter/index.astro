@@ -2,9 +2,12 @@
 import Prompt from '../../components/Prompt.astro';
 import Shots from '../../components/Shots.astro';
 import Window from '../../components/Window.astro';
+import { at } from '../../fs';
 import Layout from '../../layouts/Layout.astro';
 
 const path = '~/prosjekter';
+const proof = at(`${path}/proof/README.md`).text!;
+const rabra = at(`${path}/rabra/README.md`).text!;
 ---
 
 <Layout title="Prosjekter | Tømmerås" description="Prosjektene til Steffen Tømmerås, med skjermbilder.">
@@ -17,13 +20,9 @@ const path = '~/prosjekter';
       <!-- head shows the start of each README, so the text here matches the start of the project page -->
       <Prompt path={path} command="head proof/README.md" />
       <h2 class="title">
-        <span aria-hidden="true"># </span>Proof
+        <span aria-hidden="true"># </span>{proof.title}
       </h2>
-      <p>
-        En cocktaillogg med versjonshistorikk inspirert av git. Hver versjon av en oppskrift er en commit med
-        ingredienser, metode, garnityr og hva du syntes om drinken. Du kan lage en branch av en oppskrift eller flytte
-        HEAD tilbake til en eldre versjon uten at noe du har skrevet blir overskrevet.
-      </p>
+      <p>{proof.body}</p>
       <Shots label="Skjermbilder fra demoen av Proof">
         <img
           src="/prosjekter/proof-liste.jpg"
@@ -55,12 +54,9 @@ const path = '~/prosjekter';
     <section>
       <Prompt path={path} command="head rabra/README.md" />
       <h2 class="title">
-        <span aria-hidden="true"># </span>#Råbra
+        <span aria-hidden="true"># </span>{rabra.title}
       </h2>
-      <p>
-        En app for å gi kolleger ros. #Råbra er en metode fra helsevesenet for å lære av det som gikk bra, ikke bare av
-        avvikene.
-      </p>
+      <p>{rabra.body}</p>
       <Shots label="Skjermbilde fra demoen av #Råbra">
         <img
           src="/prosjekter/rabra-feed-desktop.jpg"
