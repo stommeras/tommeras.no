@@ -46,20 +46,18 @@ const { path } = Astro.props;
   <!-- Every ls -l row, which the prompt copies when it lists a directory -->
   <template class="rows">
     <ul>
-      {
-        [...items].map(([path, item]) => (
-          <>
-            <Entry item={item} path={path} />
-            {item.kind === 'dir' && <Entry item={item} path={path} self />}
-          </>
-        ))
-      }
+      {[...items].map(([path, item]) => (
+        <>
+          <Entry item={item} path={path} />
+          {item.kind === 'dir' && <Entry item={item} path={path} self />}
+        </>
+      ))}
     </ul>
   </template>
 </div>
 
 <script>
-  import { items, label, resolve, type Item, type Text } from '../fs';
+  import { absolute, items, label, resolve, rowKey, type Item, type Text } from '../fs';
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const ease = 'cubic-bezier(0.32, 0.72, 0, 1)';
@@ -78,9 +76,8 @@ const { path } = Astro.props;
 
   close.addEventListener('click', shakeSoft);
 
-  // The title bar stays put between pages: it erases the previous path back to what the two share, then types
-  // the rest. The inline script above shows the previous path and keeps this page's in data-path. cd also types
-  // here when it changes directory without leaving the page.
+  // Types the change from the previous path, which the inline script above put in the title bar, to this page's.
+  // cd types here too when it changes directory without leaving the page.
   const bar = win.querySelector<HTMLElement>('.bar-path')!;
   let barPath = bar.dataset.path ?? bar.textContent!;
   let barTimers: number[] = [];
@@ -115,10 +112,8 @@ const { path } = Astro.props;
 
   if (bar.dataset.path) typeBar(bar.dataset.path);
 
-  // The prompt at the end of the page. A real input, invisible on top of it, takes the typing, so phones open
-  // their keyboard and paste, dead keys and the arrow keys work. The prompt shows the input's text with the
-  // block cursor on the character at the caret.
-  const history = win.querySelector<HTMLElement>('.prompt-end .history')!;
+  // An invisible input over the end prompt takes the typing, so phones get a keyboard and paste and dead keys work
+  const log = win.querySelector<HTMLElement>('.prompt-end .history')!;
   const prompt = win.querySelector<HTMLElement>('.prompt-end > .prompt')!;
   const promptPath = prompt.querySelector('.path')!;
   const cursor = prompt.querySelector<HTMLElement>('.cursor')!;
@@ -178,7 +173,7 @@ const { path } = Astro.props;
     const p = line('', 'output names');
     for (const { item, self } of entries) {
       const name = document.createElement(item.href ? 'a' : 'span');
-      name.textContent = self ? './' : label(item);
+      name.textContent = label(item, self);
       if (item.href) (name as HTMLAnchorElement).href = item.href;
       p.append(name);
     }
@@ -196,7 +191,9 @@ const { path } = Astro.props;
 
   const ls = (args: string[]) => {
     const options = args.filter((arg) => arg.startsWith('-') && arg !== '-');
-    const flags = options.join('').replaceAll('-', '');
+    const unknown = options.find((option) => option.startsWith('--') && option !== '--all');
+    if (unknown) return [line(`ls: ukjent valg '${unknown}'`)];
+    const flags = options.map((option) => (option === '--all' ? 'a' : option.slice(1))).join('');
     const invalid = [...flags].find((flag) => !'la'.includes(flag));
     if (invalid) return [line(`ls: ugyldig valg -- '${invalid}'`)];
     const paths = args.filter((arg) => !options.includes(arg));
@@ -208,7 +205,7 @@ const { path } = Astro.props;
       const entries =
         item.kind === 'dir'
           ? [
-              ...(flags.includes('a') ? [{ path: `${path}/.`, item, self: true }] : []),
+              ...(flags.includes('a') ? [{ path: rowKey(path, true), item, self: true }] : []),
               ...item.children!.map((child) => ({ path: `${path}/${child.name}`, item: child, self: false })),
             ]
           : [{ path, item, self: false }];
@@ -217,9 +214,9 @@ const { path } = Astro.props;
     });
   };
 
-  // head prints the same as cat, since every file is shorter than head's ten lines
+  // head prints the same as cat, since every file is shorter than head's ten lines. Without a file, real cat
+  // waits for input, so here it prints nothing.
   const cat = (command: string) => (args: string[]) => {
-    if (!args.length) return [line(`${command}: mangler filnavn`)];
     return args.flatMap((arg): Element[] => {
       const found = find(arg);
       if (!found) return [line(`${command}: ${arg}: ${missing}`)];
@@ -284,7 +281,7 @@ const { path } = Astro.props;
     cat: cat('cat'),
     head: cat('head'),
     cd,
-    pwd: () => [line(`/home/steffen${cwd.slice(1)}`)],
+    pwd: () => [line(absolute(cwd))],
     help,
     exit,
   };
@@ -301,16 +298,17 @@ const { path } = Astro.props;
     echo.setAttribute('aria-hidden', 'true');
     field.value = '';
     render();
-    if (name !== 'exit') warnedAboutJobs = false;
+    // An empty line keeps the warning, so exit, Enter, exit still goes through
+    if (name && name !== 'exit') warnedAboutJobs = false;
     if (name === 'clear') {
-      history.replaceChildren();
+      log.replaceChildren();
       return;
     }
     const output = !name ? [] : (commands[name]?.(args) ?? [line(`zsh: kommando ikke funnet: ${name}`)]);
     const entry = document.createElement('div');
     entry.className = 'entry';
     entry.append(echo, ...output);
-    history.append(entry);
+    log.append(entry);
   };
 
   field.addEventListener('input', () => {
@@ -321,18 +319,16 @@ const { path } = Astro.props;
     if (document.activeElement === field) render();
   });
   field.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') run();
-    else if (event.key === 'Escape') field.value = '';
-    else return;
+    if (event.key !== 'Enter') return;
     event.preventDefault();
-    render();
+    run();
     scrollToPrompt();
   });
 
-  // Typing anywhere on the page goes to the prompt. Only a visible character starts it, so Space, Enter and
-  // Tab keep working on the page.
+  // A visible character typed anywhere goes to the prompt, also from a focused link. Space, Enter and Tab don't.
   const onKeydown = (event: KeyboardEvent) => {
-    if (event.ctrlKey || event.metaKey || event.altKey || document.activeElement !== document.body) return;
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (document.activeElement?.closest('input, textarea, select, [contenteditable]')) return;
     if ((event.key.length !== 1 && event.key !== 'Dead') || event.key === ' ') return;
     field.focus({ preventScroll: true });
     scrollToPrompt();
@@ -340,16 +336,19 @@ const { path } = Astro.props;
 
   // A click in the terminal focuses the prompt too, unless it lands on something that takes focus itself or ends
   // a text selection. On a touchscreen only a tap at the end of the page does, so reading doesn't open the keyboard.
+  // Read from pointerdown, since older Safari fires click as a MouseEvent without pointerType
+  let pointer = '';
   const onClick = (event: MouseEvent) => {
     const target = event.target as Element;
     if (target.closest('a, button, input, textarea, select, summary, [tabindex]')) return;
     if (!getSelection()?.isCollapsed) return;
-    if ((event as PointerEvent).pointerType === 'touch' && !target.closest('.prompt-end')) return;
+    if (pointer === 'touch' && !target.closest('.prompt-end')) return;
     field.focus({ preventScroll: true });
   };
 
   const listen = () => {
     addEventListener('keydown', onKeydown);
+    content.addEventListener('pointerdown', (event) => (pointer = event.pointerType));
     content.addEventListener('click', onClick);
   };
 
@@ -418,9 +417,6 @@ const { path } = Astro.props;
     background: var(--chrome);
     color: var(--muted);
     font-size: 0.8125rem;
-  }
-
-  .bar {
     position: sticky;
     top: 0;
     z-index: 1;

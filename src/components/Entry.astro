@@ -1,21 +1,21 @@
 ---
 // One row of ls -l output
-import { label, perm, type Item } from '../fs';
+import { label, perm, rowKey, type Item } from '../fs';
 import Icon from './Icon.astro';
 
 interface Props {
   item: Item;
-  // The item's path, which the prompt in Window.astro finds the row by
+  // Lets the prompt in Window.astro find and copy this row
   path?: string;
   // The ./ row that ls -a shows for the directory itself
   self?: boolean;
 }
 
 const { item, path, self } = Astro.props;
-const name = self ? './' : label(item);
+const name = label(item, self);
 ---
 
-<li data-path={path && (self ? `${path}/.` : path)}>
+<li data-path={path && rowKey(path, self)}>
   <span class="perm" aria-hidden="true">
     {perm(item)}
   </span>

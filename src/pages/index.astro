@@ -3,12 +3,12 @@ import Entry from '../components/Entry.astro';
 import Hero from '../components/Hero.astro';
 import Prompt from '../components/Prompt.astro';
 import Window from '../components/Window.astro';
-import { at } from '../fs';
+import { byPath } from '../fs';
 import Layout from '../layouts/Layout.astro';
 
-const about = at('~/om-meg.md').text!;
-const kontakt = at('~/kontakt');
-const prosjekter = at('~/prosjekter');
+const about = byPath('~/om-meg.md').text!;
+const kontakt = byPath('~/kontakt');
+const prosjekter = byPath('~/prosjekter');
 ---
 
 <Layout>
@@ -35,7 +35,8 @@ const prosjekter = at('~/prosjekter');
     <section>
       <Prompt command="cat om-meg.md" />
       <h2 class="title">
-        <span aria-hidden="true"># </span>{about.title}
+        <span aria-hidden="true"># </span>
+        {about.title}
       </h2>
       <p class="about">{about.body}</p>
     </section>
@@ -44,7 +45,9 @@ const prosjekter = at('~/prosjekter');
       <Prompt command="ls -l kontakt/" />
       <h2 class="visually-hidden">Kontakt</h2>
       <ul>
-        {kontakt.children!.map((item) => <Entry item={item} />)}
+        {kontakt.children!.map((item) => (
+          <Entry item={item} />
+        ))}
       </ul>
     </section>
 
@@ -53,7 +56,9 @@ const prosjekter = at('~/prosjekter');
       <h2 class="visually-hidden">Prosjekter</h2>
       <ul>
         <Entry item={prosjekter} self />
-        {prosjekter.children!.map((item) => <Entry item={item} />)}
+        {prosjekter.children!.map((item) => (
+          <Entry item={item} />
+        ))}
       </ul>
     </section>
   </Window>

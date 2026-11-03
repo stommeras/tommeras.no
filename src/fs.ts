@@ -4,7 +4,7 @@
 export type Icon = 'folder' | 'file' | 'terminal' | 'mail' | 'github' | 'linkedin' | 'flask';
 
 export interface Text {
-  // Printed as a # heading, the way the pages show a Markdown title
+  // cat and the pages show it as a # heading, like a Markdown title
   title?: string;
   body: string;
 }
@@ -129,7 +129,13 @@ const add = (path: string, item: Item) => {
 add('~', home);
 
 // For the pages, which only ask for paths that exist
-export const at = (path: string) => items.get(path)!;
+export const byPath = (path: string) => items.get(path)!;
+
+export const homeDir = '/home/steffen';
+export const absolute = (path: string) => `${homeDir}${path.slice(1)}`;
+
+// Entry.astro marks each ls -l row with this key, and the prompt copies rows by it. The ./ row gets its own key.
+export const rowKey = (path: string, self = false) => (self ? `${path}/.` : path);
 
 export const perm = (item: Item) =>
   item.kind === 'dir'
@@ -140,14 +146,14 @@ export const perm = (item: Item) =>
         ? '-rwxr-xr-x'
         : '-rw-r--r--';
 
-export const label = (item: Item) => (item.kind === 'dir' ? `${item.name}/` : item.name);
+export const label = (item: Item, self = false) => (self ? './' : item.kind === 'dir' ? `${item.name}/` : item.name);
 
 // Turns what a visitor typed into a path like ~/kontakt, relative to cwd. Returns undefined for paths outside
 // the home directory, since the tree has nothing there.
 export function resolve(cwd: string, arg: string): string | undefined {
   if (arg.startsWith('/')) {
-    if (arg !== '/home/steffen' && !arg.startsWith('/home/steffen/')) return undefined;
-    arg = `~${arg.slice('/home/steffen'.length)}`;
+    if (arg !== homeDir && !arg.startsWith(`${homeDir}/`)) return undefined;
+    arg = `~${arg.slice(homeDir.length)}`;
   }
   if (arg.startsWith('~') && arg !== '~' && !arg.startsWith('~/')) return undefined;
   const parts = arg.startsWith('~') ? [] : cwd.split('/').slice(1);

@@ -2,12 +2,12 @@
 import Prompt from '../../components/Prompt.astro';
 import Shots from '../../components/Shots.astro';
 import Window from '../../components/Window.astro';
-import { at } from '../../fs';
+import { byPath } from '../../fs';
 import Layout from '../../layouts/Layout.astro';
 
 const path = '~/prosjekter';
-const proof = at(`${path}/proof/README.md`).text!;
-const rabra = at(`${path}/rabra/README.md`).text!;
+const proof = byPath(`${path}/proof/README.md`).text!;
+const rabra = byPath(`${path}/rabra/README.md`).text!;
 ---
 
 <Layout title="Prosjekter | Tømmerås" description="Prosjektene til Steffen Tømmerås, med skjermbilder.">
@@ -20,7 +20,8 @@ const rabra = at(`${path}/rabra/README.md`).text!;
       <!-- head shows the start of each README, so the text here matches the start of the project page -->
       <Prompt path={path} command="head proof/README.md" />
       <h2 class="title">
-        <span aria-hidden="true"># </span>{proof.title}
+        <span aria-hidden="true"># </span>
+        {proof.title}
       </h2>
       <p>{proof.body}</p>
       <Shots label="Skjermbilder fra demoen av Proof">
@@ -54,7 +55,8 @@ const rabra = at(`${path}/rabra/README.md`).text!;
     <section>
       <Prompt path={path} command="head rabra/README.md" />
       <h2 class="title">
-        <span aria-hidden="true"># </span>{rabra.title}
+        <span aria-hidden="true"># </span>
+        {rabra.title}
       </h2>
       <p>{rabra.body}</p>
       <Shots label="Skjermbilde fra demoen av #Råbra">
