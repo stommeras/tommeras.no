@@ -150,9 +150,9 @@ import Layout from '../layouts/Layout.astro';
   // Markup this script expects inside <main>:
   //   - a Prompt directly in <main>, followed by the Hero (the output of ./hei.sh)
   //   - each <section> starts with its Prompt; every later child is that prompt's output
-  // Classes: the inline guard adds html.typing and this script removes it when the sequence ends or
-  // is skipped. This script adds html.typing-started, .shown on
-  // each revealed element, and .current on the prompt with the cursor.
+  //   - the final Prompt, without a command, inside .prompt-end, which Window.astro renders on every page
+  // Classes: the inline guard adds html.typing, and finish() removes it. This script adds
+  // html.typing-started, .shown on each revealed element, and .current on the prompt with the cursor.
   // Events on window: "hei" when ./hei.sh's output appears, which Hero.astro waits for, and "typed"
   // when the last prompt appears or the sequence is skipped, which Window.astro waits for.
   const root = document.documentElement;
@@ -228,12 +228,14 @@ import Layout from '../layouts/Layout.astro';
     function showPrompt({ prompt }: Step) {
       prompt.classList.add('shown', 'current');
       shownAt = performance.now();
-      if (prompt.querySelector('.cmd')) {
-        observer.observe(prompt);
-      } else {
-        root.classList.remove('typing');
-        dispatchEvent(new Event('typed'));
-      }
+      if (prompt.querySelector('.cmd')) observer.observe(prompt);
+      else finish();
+    }
+
+    // Shows anything still hidden and hands the keys to Window.astro, whether the sequence ended or was skipped
+    function finish() {
+      root.classList.remove('typing');
+      dispatchEvent(new Event('typed'));
     }
 
     async function run(index: number) {
@@ -251,12 +253,11 @@ import Layout from '../layouts/Layout.astro';
     function skip() {
       if (skipped) return;
       skipped = true;
-      root.classList.remove('typing');
       for (const cmd of commands) cmd.textContent = cmd.dataset.text!;
       observer.disconnect();
       for (const el of main.querySelectorAll('.current')) el.classList.remove('current');
       startHero();
-      dispatchEvent(new Event('typed'));
+      finish();
     }
 
     // Moves each command's text into data-text, so type() can write it back one character at a time

@@ -49,22 +49,17 @@ const { path } = Astro.props;
   const shakeSoft = () => shake([0, -10, 10, -8, 8, -4, 4, 0], 450);
   const shakeHard = () => shake([0, -43, 39, -35, 31, -27, 24, -21, 18, -15, 12, -10, 8, -6, 4, -2, 0], 900);
 
-  const runningJobs = 'zsh: du har jobber som kjører.';
-
   const reply = (command: string) => {
     const vimQuit = command.match(vimQuitPattern);
-    if (vimQuit?.[2] || command === 'exit!') {
+    if (vimQuit?.[2]) {
       shakeHard();
       return 'Godt forsøk.';
     }
-    if (vimQuit) {
+    if (command === 'exit') {
       shakeSoft();
-      return `zsh: kommando ikke funnet: ${command}`;
+      return 'zsh: du har jobber som kjører.';
     }
-    if (command === 'exit' || command === 'logout') {
-      shakeSoft();
-      return runningJobs;
-    }
+    if (vimQuit) shakeSoft();
     return `zsh: kommando ikke funnet: ${command.split(' ')[0]}`;
   };
 
@@ -78,10 +73,7 @@ const { path } = Astro.props;
     input.textContent = '';
   };
 
-  close.addEventListener('click', () => {
-    input.textContent = 'exit';
-    run('exit');
-  });
+  close.addEventListener('click', shakeSoft);
 
   const onKeydown = (event: KeyboardEvent) => {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
