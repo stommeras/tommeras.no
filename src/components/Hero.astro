@@ -1,17 +1,17 @@
 ---
 interface Props {
-  copy?: boolean;
+  printed?: boolean;
 }
 
-const { copy = false } = Astro.props;
+const { printed = false } = Astro.props;
 const title = 'TØMMERÅS';
-const Title = copy ? 'p' : 'h1';
+const Title = printed ? 'p' : 'h1';
 ---
 
-<header class:list={['hero', { copy }]}>
-  <Title class="name" aria-label={copy ? undefined : title}>
-    {/* aria-label doesn't name a <p>, so the copy carries its title as hidden text */}
-    {copy && <span class="visually-hidden">{title}</span>}
+<header class:list={['hero', { printed }]}>
+  <Title class="name" aria-label={printed ? undefined : title}>
+    {/* aria-label doesn't name a <p>, so the printed hero carries its title as hidden text */}
+    {printed && <span class="visually-hidden">{title}</span>}
     <span aria-hidden="true" data-value={title}>
       {title}
     </span>
@@ -130,12 +130,12 @@ const Title = copy ? 'p' : 'h1';
 
   @media (prefers-reduced-motion: no-preference) {
     :global(html.typing) .hero:global(.shown) .name,
-    .copy .name {
+    .printed .name {
       animation: hero-in 300ms ease-out both;
     }
 
     :global(html.typing) .hero:global(.shown) .subtitle,
-    .copy .subtitle {
+    .printed .subtitle {
       animation: hero-in 500ms ease-out 600ms both;
     }
   }

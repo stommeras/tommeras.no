@@ -1,4 +1,4 @@
-const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ';
 const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -10,7 +10,7 @@ export function setUpHero(hero: Element) {
   let interval: number | undefined;
 
   function scramble() {
-    if (reducedMotion) return;
+    if (reducedMotion.matches) return;
     let iteration = 0;
     clearInterval(interval);
     interval = setInterval(() => {
