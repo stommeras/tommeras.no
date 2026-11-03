@@ -54,14 +54,25 @@ const { path } = Astro.props;
   const input = document.createElement('span');
   prompt.querySelector('.cursor')!.before(input);
 
-  const shake = () => {
+  const shake = (offsets: number[], duration: number) => {
     if (reducedMotion.matches) return;
-    win.animate({ translate: ['0px', '-10px', '10px', '-8px', '8px', '-4px', '4px', '0px'] }, 450);
+    win.animate({ translate: offsets.map((x) => `${x}px`) }, duration);
   };
+  const shakeSoft = () => shake([0, -10, 10, -8, 8, -4, 4, 0], 450);
+  const shakeHard = () => shake([0, -43, 39, -35, 31, -27, 24, -21, 18, -15, 12, -10, 8, -6, 4, -2, 0], 900);
+
+  // Like zsh, the first exit warns about running jobs and an exit right after it goes through
+  let warnedAboutJobs = false;
 
   const reply = (command: string) => {
-    if (command === 'exit') {
-      shake();
+    const secondExit = command === 'exit' && warnedAboutJobs;
+    warnedAboutJobs = command === 'exit' && !secondExit;
+    if (secondExit) {
+      shakeHard();
+      return 'Godt forsøk.';
+    }
+    if (warnedAboutJobs) {
+      shakeSoft();
       return 'zsh: du har jobber som kjører.';
     }
     return `zsh: kommando ikke funnet: ${command.split(' ')[0]}`;
@@ -77,7 +88,7 @@ const { path } = Astro.props;
     input.textContent = '';
   };
 
-  close.addEventListener('click', shake);
+  close.addEventListener('click', shakeSoft);
 
   const onKeydown = (event: KeyboardEvent) => {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
