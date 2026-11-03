@@ -1,6 +1,7 @@
 ---
 import { items } from '../fs';
 import Entry from './Entry.astro';
+import Hero from './Hero.astro';
 import Prompt from './Prompt.astro';
 
 interface Props {
@@ -53,6 +54,10 @@ const { path } = Astro.props;
         </>
       ))}
     </ul>
+  </template>
+  <!-- What ./hei.sh prints, on every page -->
+  <template class="hero-copy">
+    <Hero copy />
   </template>
 </div>
 
@@ -247,9 +252,45 @@ const { path } = Astro.props;
     return [];
   };
 
+  const heroCopy = win.querySelector<HTMLTemplateElement>('template.hero-copy')!.content;
+
+  // What each executable in fs.ts prints when it runs
+  const programs: Record<string, () => Element[]> = {
+    '~/hei.sh': () => [heroCopy.firstElementChild!.cloneNode(true) as Element],
+  };
+
+  // ./hei.sh and other paths as commands. The errors follow zsh's, translated like the others.
+  const exec = (arg: string) => {
+    const found = find(arg);
+    if (!found) return [line(`zsh: ingen slik fil eller filkatalog: ${arg}`)];
+    const { path, item } = found;
+    if (item.kind === 'dir') return [line(`zsh: er en filkatalog: ${arg}`)];
+    if (!item.executable) return [line(`zsh: tilgang nektet: ${arg}`)];
+    return programs[path]?.() ?? [];
+  };
+
+  // sh and bash read the file as a script, so they run hei.sh without ./ and stop at the first line of anything
+  // else that isn't a comment, as bash does. Without a file, real sh waits for input, so here it prints nothing.
+  const sh = (command: string) => (args: string[]) => {
+    const [arg] = args;
+    if (!arg) return [];
+    const found = find(arg);
+    if (!found) return [line(`${command}: ${arg}: ${missing}`)];
+    const { path, item } = found;
+    if (item.kind === 'dir') return [line(`${command}: ${arg}: Er en filkatalog`)];
+    if (item.executable) return programs[path]?.() ?? [];
+    const lines = item.text
+      ? [...(item.text.title ? [`# ${item.text.title}`] : []), ...item.text.body.split('\n')]
+      : [];
+    const at = lines.findIndex((text) => text.trim() && !text.trim().startsWith('#'));
+    if (at === -1) return [];
+    return [line(`${arg}: linje ${at + 1}: ${lines[at].trim().split(/\s+/)[0]}: kommando ikke funnet`)];
+  };
+
   const help = () => [
     line(
       [
+        './hei.sh        si hei',
         'ls [-la] [sti]  vis hva som ligger i en mappe',
         'cat <fil>       skriv ut en fil',
         'head <fil>      skriv ut starten av en fil',
@@ -282,6 +323,8 @@ const { path } = Astro.props;
     head: cat('head'),
     cd,
     pwd: () => [line(absolute(cwd))],
+    sh: sh('sh'),
+    bash: sh('bash'),
     help,
     exit,
   };
@@ -304,11 +347,17 @@ const { path } = Astro.props;
       log.replaceChildren();
       return;
     }
-    const output = !name ? [] : (commands[name]?.(args) ?? [line(`zsh: kommando ikke funnet: ${name}`)]);
+    const output = !name
+      ? []
+      : name.includes('/')
+        ? exec(name)
+        : (commands[name]?.(args) ?? [line(`zsh: kommando ikke funnet: ${name}`)]);
     const entry = document.createElement('div');
     entry.className = 'entry';
     entry.append(echo, ...output);
     log.append(entry);
+    // Hero.astro scrambles the title and places the stars, which it can do only once the copy is in the page
+    for (const hero of entry.querySelectorAll('.hero')) dispatchEvent(new CustomEvent('hero-copy', { detail: hero }));
   };
 
   field.addEventListener('input', () => {
