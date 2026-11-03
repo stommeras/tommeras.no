@@ -351,6 +351,8 @@ const { path } = Astro.props;
 
   .prompt-end :global(.prompt) {
     scroll-margin-bottom: var(--end-padding);
+    /* Wraps at the window edge whatever the character, like a terminal, instead of moving the command below the arrow */
+    word-break: break-all;
   }
 
   .prompt-end :global(.output) {
