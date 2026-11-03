@@ -206,31 +206,6 @@ const { path } = Astro.props;
     padding: 12px 16px;
     border-bottom: 1px solid var(--line);
     user-select: none;
-    view-transition-name: bar;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    @view-transition {
-      navigation: auto;
-    }
-
-    :global(::view-transition-group(*)) {
-      animation-duration: 150ms;
-    }
-
-    /* The sticky bar sits higher on a scrolled page, so it jumps to its new spot instead of sliding there.
-       Only the name goes, so its path text still fades for 150ms. */
-    :global(::view-transition-group(bar)) {
-      animation-name: none;
-    }
-  }
-
-  /* The bar is captured without the window's clip, so its snapshot gets the window's top corners itself */
-  @media (prefers-reduced-motion: no-preference) and (min-width: 601px) {
-    :global(::view-transition-group(bar)) {
-      overflow: clip;
-      border-radius: 14px 14px 0 0;
-    }
   }
 
   .dots {

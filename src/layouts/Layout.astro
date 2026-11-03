@@ -139,6 +139,23 @@ const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tøm
     }
   }
 
+  @media (prefers-reduced-motion: no-preference) {
+    @view-transition {
+      navigation: auto;
+    }
+
+    /* Out, then in, like a terminal clearing before it prints. A cross-fade shows two windows at once when
+       the old page was scrolled. */
+    ::view-transition-old(root) {
+      animation-duration: 75ms;
+    }
+
+    ::view-transition-new(root) {
+      animation-duration: 75ms;
+      animation-delay: 75ms;
+    }
+  }
+
   /* The spotlight still follows the pointer, just without trailing behind it */
   @media (prefers-reduced-motion: reduce) {
     :root {
