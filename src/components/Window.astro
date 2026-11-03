@@ -24,10 +24,15 @@ const { path } = Astro.props;
       <slot />
     </main>
     <div class="status" aria-hidden="true">
-      <span class="mode" data-mode="normal">NORMAL</span>
+      <span class="mode" data-mode="normal">
+        NORMAL
+      </span>
       <!-- The window is zsh in a Neovim :terminal buffer, named term://{cwd}//{pid}:{cmd} -->
       <span>term://~//4242:zsh</span>
-      <span class="cmdline"><span class="cmdline-text"></span><Cursor /></span>
+      <span class="cmdline">
+        <span class="cmdline-text"></span>
+        <Cursor />
+      </span>
       <span class="hide-mobile">nb_NO</span>
       <span class="hide-mobile">utf-8</span>
       <span class="hide-mobile">Ln 1, Col 1</span>
@@ -216,6 +221,20 @@ const { path } = Astro.props;
 
     :global(::view-transition-group(*)) {
       animation-duration: 150ms;
+    }
+
+    /* The sticky bar sits higher on a scrolled page, so it jumps to its new spot instead of sliding there.
+       Only the name goes, so its path text still fades for 150ms. */
+    :global(::view-transition-group(bar)) {
+      animation-name: none;
+    }
+  }
+
+  /* The bar is captured without the window's clip, so its snapshot gets the window's top corners itself */
+  @media (prefers-reduced-motion: no-preference) and (min-width: 601px) {
+    :global(::view-transition-group(bar)) {
+      overflow: clip;
+      border-radius: 14px 14px 0 0;
     }
   }
 

@@ -25,7 +25,9 @@ const { command, path = '~', href, comment } = Astro.props;
   {command &&
     (href ? (
       <a class="cmd" href={href}>
-        {command}<Cursor />{comment && <span class="comment"># {comment}</span>}
+        {command}
+        <Cursor />
+        {comment && <span class="comment"># {comment}</span>}
       </a>
     ) : (
       <span class="cmd">{command}</span>
@@ -59,8 +61,8 @@ const { command, path = '~', href, comment } = Astro.props;
     display: none;
   }
 
+  /* Hidden rather than removed, so the comment doesn't shift on hover. The margin is the blank cell after the cursor. */
   a.cmd > :global(.cursor) {
-    width: 1ch;
     margin-right: 1ch;
     visibility: hidden;
   }
