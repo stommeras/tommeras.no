@@ -1,31 +1,33 @@
 ---
-// One row of ls -l output. The icon goes in the slot as an inline SVG.
+// One row of ls -l output
+import { label, perm, rowKey, type Item } from '../fs';
+import Icon from './Icon.astro';
+
 interface Props {
-  // The mode column, like lrwxr-xr-x for a link or drwxr-xr-x for a directory
-  perm: string;
-  href: string;
-  label: string;
-  // Where a link points, shown after -> as ls -l does
-  target?: string;
-  desc?: string;
+  item: Item;
+  // Lets the prompt in Window.astro find and copy this row
+  path?: string;
+  // The ./ row that ls -a shows for the directory itself
+  self?: boolean;
 }
 
-const { perm, href, label, target, desc } = Astro.props;
+const { item, path, self } = Astro.props;
+const name = label(item, self);
 ---
 
-<li>
+<li data-path={path && rowKey(path, self)}>
   <span class="perm" aria-hidden="true">
-    {perm}
+    {perm(item)}
   </span>
-  <slot />
+  <Icon name={item.icon} />
   <span>
-    <a href={href}>{label}</a>{' '}
-    {target && (
+    {item.href ? <a href={item.href}>{name}</a> : name}{' '}
+    {!self && item.target && (
       <span class="target" aria-hidden="true">
-        -> {target}
+        -> {item.target}
       </span>
     )}{' '}
-    {desc && <span class="desc">{desc}</span>}
+    {item.desc && <span class="desc">{item.desc}</span>}
   </span>
 </li>
 
