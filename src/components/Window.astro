@@ -1,5 +1,5 @@
 ---
-import Cursor from './Cursor.astro';
+import Prompt from './Prompt.astro';
 
 interface Props {
   // The path the title bar shows, as in steffen@tommeras: ~
@@ -17,47 +17,32 @@ const { path } = Astro.props;
       <i></i>
     </span>
     <span class="bar-title">steffen@tommeras: {path}</span>
-    <span class="bar-right">nvim</span>
+    <span class="bar-right">zsh</span>
   </div>
   <div class="content">
     <main>
       <slot />
+      <!-- Every page ends on an empty prompt that takes keyboard input -->
+      <div class="prompt-end">
+        <Prompt path={path} />
+      </div>
     </main>
-    <div class="status" aria-hidden="true">
-      <span class="mode" data-mode="normal">NORMAL</span>
-      <!-- The window is zsh in a Neovim :terminal buffer, named term://{cwd}//{pid}:{cmd} -->
-      <span>term://~//4242:zsh</span>
-      <span class="cmdline"><span class="cmdline-text"></span><Cursor /></span>
-      <span class="hide-mobile">nb_NO</span>
-      <span class="hide-mobile">utf-8</span>
-      <span class="hide-mobile">Ln 1, Col 1</span>
-    </div>
-    <!-- While index.astro types its commands, the keys go to zsh, as in Neovim's terminal mode. Set
-    before first paint, so the label doesn't flash NORMAL -->
-    <script is:inline>
-      if (document.documentElement.classList.contains('typing')) {
-        const mode = document.querySelector('.window .mode');
-        mode.textContent = 'TERMINAL';
-        mode.dataset.mode = 'terminal';
-      }
-    </script>
   </div>
 </div>
 
 <script>
-  type Mode = 'terminal' | 'normal' | 'visual' | 'command';
-
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const ease = 'cubic-bezier(0.32, 0.72, 0, 1)';
-  const quitPattern = /^(q|quit|wq|x|qa|wqa)(!?)$/;
+  // Vim's quit commands, typed into the shell out of habit
+  const vimQuitPattern = /^:(q|quit|wq|x|qa|wqa)(!?)$/;
 
   // Every page has exactly one Window
   const win = document.querySelector<HTMLElement>('.window')!;
   const [close, minimize, maximize] = win.querySelectorAll('.dots i');
   const content = win.querySelector<HTMLElement>('.content')!;
-  const modeLabel = win.querySelector<HTMLElement>('.mode')!;
-  const cmdline = win.querySelector<HTMLElement>('.cmdline')!;
-  const cmdlineText = win.querySelector<HTMLElement>('.cmdline-text')!;
+  const prompt = win.querySelector<HTMLElement>('.prompt-end .prompt')!;
+  const input = document.createElement('span');
+  prompt.querySelector('.cursor')!.before(input);
 
   const shake = (offsets: number[], duration: number) => {
     if (reducedMotion.matches) return;
@@ -66,72 +51,66 @@ const { path } = Astro.props;
   const shakeSoft = () => shake([0, -10, 10, -8, 8, -4, 4, 0], 450);
   const shakeHard = () => shake([0, -43, 39, -35, 31, -27, 24, -21, 18, -15, 12, -10, 8, -6, 4, -2, 0], 900);
 
-  let mode = modeLabel.dataset.mode as Mode;
-  let line = '';
-  let message = '';
+  // zsh's own message when you exit with jobs still running
+  const runningJobs = 'zsh: du har jobber som kjører.';
 
-  const selectionMode = (): Mode => (getSelection()?.isCollapsed === false ? 'visual' : 'normal');
-
-  const render = () => {
-    modeLabel.textContent = mode.toUpperCase();
-    modeLabel.dataset.mode = mode;
-    cmdlineText.textContent = mode === 'command' ? `:${line}` : message;
-    cmdline.classList.toggle('error', mode !== 'command');
+  const reply = (command: string) => {
+    const vimQuit = command.match(vimQuitPattern);
+    if (vimQuit?.[2] || command === 'exit!') {
+      shakeHard();
+      return 'Godt forsøk.';
+    }
+    if (vimQuit) {
+      shakeSoft();
+      return `zsh: kommando ikke funnet: ${command}`;
+    }
+    if (command === 'exit' || command === 'logout') {
+      shakeSoft();
+      return runningJobs;
+    }
+    return `zsh: kommando ikke funnet: ${command.split(' ')[0]}`;
   };
 
+  // Like a shell, the command stays above as history with its output, and the empty prompt moves down
   const run = (command: string) => {
-    const match = command.match(quitPattern);
-    if (!match) {
-      message = `E492: Ikke en editorkommando: ${command}`;
-    } else if (match[2]) {
-      shakeHard();
-      message = 'Godt forsøk.';
-    } else {
-      shakeSoft();
-      message = 'E948: Jobben kjører fortsatt (legg til ! for å avslutte jobben)';
-    }
+    const echo = prompt.cloneNode(true) as HTMLElement;
+    echo.querySelector('.cursor')!.remove();
+    const output = document.createElement('p');
+    // .shown, since index.astro hides anything in .prompt-end without it while html.typing stays on
+    output.className = 'output shown';
+    output.textContent = reply(command);
+    prompt.before(echo, output);
+    input.textContent = '';
   };
 
   close.addEventListener('click', () => {
-    run('q');
-    render();
+    input.textContent = 'exit';
+    run('exit');
   });
 
-  document.addEventListener('selectionchange', () => {
-    // The command line keeps its mode, and in terminal mode only a selection changes it
-    if (mode === 'command' || (mode === 'terminal' && selectionMode() === 'normal')) return;
-    mode = selectionMode();
-    render();
-  });
-
-  // index.astro sends this when its commands finish typing or are skipped
-  addEventListener('typed', () => {
-    if (mode !== 'terminal') return;
-    mode = selectionMode();
-    render();
-  });
+  // The keys belong to index.astro's typing sequence until it ends. The timeout keeps the key that skips
+  // the sequence from also landing on the prompt.
+  let ready = !document.documentElement.classList.contains('typing');
+  addEventListener('typed', () => setTimeout(() => (ready = true)));
 
   addEventListener('keydown', (event) => {
-    if (event.ctrlKey || event.metaKey || event.altKey) return;
-    if (mode !== 'command') {
-      if (event.key !== ':') return;
-      mode = 'command';
-      line = '';
-      message = '';
-    } else if (event.key === 'Escape' || (event.key === 'Backspace' && !line)) {
-      mode = selectionMode();
-    } else if (event.key === 'Enter') {
-      if (line) run(line);
-      mode = selectionMode();
-    } else if (event.key === 'Backspace') {
-      line = line.slice(0, -1);
-    } else if (event.key.length === 1) {
-      line += event.key;
+    if (!ready || event.ctrlKey || event.metaKey || event.altKey) return;
+    const line = input.textContent!;
+    // Enter and Space on an empty line keep following links and scrolling the page
+    if (event.key === 'Enter' && line.trim()) {
+      run(line.trim());
+    } else if (event.key === 'Escape' && line) {
+      input.textContent = '';
+    } else if (event.key === 'Backspace' && line) {
+      input.textContent = line.slice(0, -1);
+    } else if (event.key.length === 1 && (event.key !== ' ' || line)) {
+      input.textContent = line + event.key;
     } else {
       return;
     }
     event.preventDefault();
-    render();
+    // A terminal jumps to its prompt when you type
+    prompt.scrollIntoView({ block: 'nearest', behavior: reducedMotion.matches ? 'instant' : 'smooth' });
   });
 
   const isShaded = () => win.classList.contains('shaded');
@@ -180,7 +159,7 @@ const { path } = Astro.props;
     --gutter: clamp(16px, 8vw - 32px, 64px);
     width: min(1040px, 100% - 2 * var(--gutter));
     margin: 72px auto;
-    /* clip, not hidden. hidden would make the window a scroll container and stop the status bar from sticking */
+    /* clip, not hidden. hidden would make the window a scroll container and stop the title bar from sticking */
     overflow: clip;
     background: var(--surface);
     border: 1px solid var(--line);
@@ -188,8 +167,7 @@ const { path } = Astro.props;
     box-shadow: 0 30px 60px -30px var(--shadow);
   }
 
-  .bar,
-  .status {
+  .bar {
     background: var(--chrome);
     color: var(--muted);
     font-size: 0.8125rem;
@@ -332,59 +310,19 @@ const { path } = Astro.props;
     color: var(--lavender);
   }
 
-  .status {
-    position: sticky;
-    bottom: 0;
-    display: flex;
-    border-top: 1px solid var(--line);
+  .prompt-end {
+    margin-top: 56px;
   }
 
-  .status > span {
-    padding: 6px 14px;
+  /* Typing scrolls the prompt into view with the window's bottom padding below it */
+  .prompt-end :global(.prompt) {
+    scroll-margin-bottom: 72px;
   }
 
-  .status .mode {
-    background: var(--mint);
-    color: var(--surface);
-    font-weight: 700;
-  }
-
-  .status .mode[data-mode='terminal'] {
-    background: var(--pink);
-  }
-
-  .status .mode[data-mode='visual'] {
-    background: var(--lavender);
-  }
-
-  .status .mode[data-mode='command'] {
-    background: var(--peach);
-  }
-
-  .status .cmdline {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    white-space: nowrap;
-  }
-
-  .cmdline-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .status .cmdline.error {
-    color: var(--pink);
-  }
-
-  .window:not(:has(.mode[data-mode='command'])) .cmdline :global(.cursor),
-  .window:has(.mode[data-mode='command']) main :global(.cursor) {
-    display: none;
-  }
-
-  .cmdline :global(.cursor) {
-    flex: none;
+  .prompt-end :global(.output) {
+    margin: 0;
+    font-size: 0.9375rem;
+    overflow-wrap: anywhere;
   }
 
   @media (max-width: 600px) {
@@ -396,8 +334,7 @@ const { path } = Astro.props;
       box-shadow: none;
     }
 
-    .bar-right,
-    .hide-mobile {
+    .bar-right {
       display: none;
     }
 
