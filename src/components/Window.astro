@@ -63,6 +63,7 @@ const { path } = Astro.props;
 <script>
   import { absolute, items, label, resolve, rowKey, type Item, type Text } from '../fs';
   import { setUpHero } from '../hero';
+  import { add, draftPosition, expand, step } from '../history';
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const ease = 'cubic-bezier(0.32, 0.72, 0, 1)';
@@ -152,6 +153,34 @@ const { path } = Astro.props;
 
   const scrollToPrompt = () =>
     prompt.scrollIntoView({ block: 'nearest', behavior: reducedMotion.matches ? 'instant' : 'smooth' });
+
+  let commandHistory: string[] = [];
+  let historyAt = 0;
+  let draft = '';
+  const remember = (command: string) => {
+    commandHistory = add(commandHistory, command);
+    try {
+      sessionStorage.setItem('history', JSON.stringify(commandHistory));
+    } catch {}
+  };
+  const loadHistoryAndPageCommands = () => {
+    try {
+      commandHistory = JSON.parse(sessionStorage.getItem('history') ?? '[]');
+    } catch {}
+    for (const cmd of win.querySelectorAll<HTMLElement>('main span.cmd')) remember(cmd.dataset.command!);
+    historyAt = draftPosition(commandHistory);
+    draft = '';
+  };
+  loadHistoryAndPageCommands();
+  // Back and Forward restore a page without running its script, so it picks up what other pages added since
+  addEventListener('pageshow', (event) => {
+    if (event.persisted) loadHistoryAndPageCommands();
+  });
+  for (const link of win.querySelectorAll<HTMLElement>('main a.cmd')) {
+    link.addEventListener('click', (event) => {
+      if (event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey) remember(link.dataset.command!);
+    });
+  }
 
   let cwd = win.dataset.path!;
   const page = location.pathname.replace(/\/+$/, '') || '/';
@@ -295,6 +324,7 @@ const { path } = Astro.props;
         'head <fil>      skriv ut starten av en fil',
         'cd [sti]        gå til en mappe',
         'pwd             vis hvor du er',
+        'history         vis tidligere kommandoer',
         'clear           tøm skjermen',
         'exit            avslutt',
       ].join('\n'),
@@ -324,22 +354,51 @@ const { path } = Astro.props;
     pwd: () => [line(absolute(cwd))],
     sh: sh('sh'),
     bash: sh('bash'),
+    history: () => [
+      line(commandHistory.map((command, i) => `${String(i + 1).padStart(5)}  ${command}`).join('\n'), 'output pre'),
+    ],
     help,
     exit,
   };
 
-  const run = () => {
-    const [name, ...args] = field.value.trim().split(/\s+/);
-    // The command line moves into the history as typed, without the cursor or the input
-    const echo = prompt.cloneNode(true) as HTMLElement;
-    echo.querySelector('.field')!.remove();
-    echo.querySelector('.cursor')!.remove();
-    const [typed, rest] = echo.querySelectorAll('.typed');
-    typed.textContent = field.value;
+  const echo = (text: string) => {
+    const copy = prompt.cloneNode(true) as HTMLElement;
+    copy.querySelector('.field')!.remove();
+    copy.querySelector('.cursor')!.remove();
+    const [typed, rest] = copy.querySelectorAll('.typed');
+    typed.textContent = text;
     rest.textContent = '';
-    echo.setAttribute('aria-hidden', 'true');
+    copy.setAttribute('aria-hidden', 'true');
+    return copy;
+  };
+
+  const printEntry = (...elements: Element[]) => {
+    const entry = document.createElement('div');
+    entry.className = 'entry';
+    entry.append(...elements);
+    log.append(entry);
+    for (const hero of entry.querySelectorAll('.hero')) setUpHero(hero)();
+  };
+
+  const newLine = () => {
     field.value = '';
+    historyAt = draftPosition(commandHistory);
+    draft = '';
     render();
+  };
+
+  const run = () => {
+    const typed = field.value;
+    const expansion = expand(commandHistory, typed);
+    if ('missing' in expansion) {
+      newLine();
+      printEntry(echo(typed), line(`zsh: ingen slik hendelse: ${expansion.missing}`));
+      return;
+    }
+    const { command, expanded } = expansion;
+    remember(command);
+    newLine();
+    const [name, ...args] = command.trim().split(/\s+/);
     // An empty line keeps the warning, so exit, Enter, exit still goes through
     if (name && name !== 'exit') warnedAboutJobs = false;
     if (name === 'clear') {
@@ -351,11 +410,7 @@ const { path } = Astro.props;
       : name.includes('/')
         ? exec(name)
         : (commands[name]?.(args) ?? [line(`zsh: kommando ikke funnet: ${name}`)]);
-    const entry = document.createElement('div');
-    entry.className = 'entry';
-    entry.append(echo, ...output);
-    log.append(entry);
-    for (const hero of entry.querySelectorAll('.hero')) setUpHero(hero)();
+    printEntry(echo(typed), ...(expanded ? [line(command)] : []), ...output);
   };
 
   field.addEventListener('input', () => {
@@ -366,9 +421,28 @@ const { path } = Astro.props;
     if (document.activeElement === field) render();
   });
   field.addEventListener('keydown', (event) => {
-    if (event.key !== 'Enter') return;
+    if (event.isComposing) return;
+    const modified = event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
+    const ctrl = event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey;
+    const key = event.key.toLowerCase();
+    const nothingSelected = field.selectionStart === field.selectionEnd && !getSelection()?.toString();
+    if (event.key === 'Enter') {
+      run();
+    } else if (!modified && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+      if (historyAt === draftPosition(commandHistory)) draft = field.value;
+      historyAt = step(commandHistory, historyAt, event.key === 'ArrowUp' ? -1 : 1);
+      field.value = commandHistory[historyAt] ?? draft;
+      field.setSelectionRange(field.value.length, field.value.length);
+      render();
+    } else if (ctrl && key === 'c' && nothingSelected) {
+      printEntry(echo(`${field.value}^C`));
+      newLine();
+    } else if (ctrl && key === 'l') {
+      log.replaceChildren();
+    } else {
+      return;
+    }
     event.preventDefault();
-    run();
     scrollToPrompt();
   });
 
