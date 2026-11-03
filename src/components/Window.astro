@@ -16,9 +16,22 @@ const { path } = Astro.props;
       <i></i>
       <i></i>
     </span>
-    <span class="bar-title">steffen@tommeras: {path}</span>
+    <span class="bar-title">
+      steffen@tommeras: <span class="bar-path">{path}</span>
+    </span>
     <span class="bar-right">nvim</span>
   </div>
+  <!-- Puts the previous page's path in the title bar before first paint, so the script below can type the change -->
+  <script is:inline>
+    try {
+      const bar = document.querySelector('.bar-path');
+      const from = sessionStorage.getItem('bar-path');
+      if (from && from !== bar.textContent && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        bar.dataset.path = bar.textContent;
+        bar.textContent = from;
+      }
+    } catch {}
+  </script>
   <div class="content">
     <main>
       <slot />
@@ -172,6 +185,36 @@ const { path } = Astro.props;
   win.querySelector('.bar')!.addEventListener('dblclick', (event) => {
     if (!(event.target as Element).closest('.dots')) toggleMaximize();
   });
+</script>
+
+<script>
+  // The title bar stays put between pages: it erases the previous path back to what the two share, then
+  // types the rest. The inline script above shows the previous path and keeps this page's in data-path.
+  const bar = document.querySelector<HTMLElement>('.bar-path')!;
+  const path = bar.dataset.path ?? bar.textContent!;
+  const eraseMs = 20;
+  const typeMs = 45;
+
+  addEventListener('pagehide', () => {
+    try {
+      sessionStorage.setItem('bar-path', path);
+    } catch {}
+  });
+
+  if (bar.dataset.path) {
+    const from = bar.textContent!;
+    let shared = 0;
+    while (from[shared] === path[shared]) shared++;
+    const frames = [
+      ...Array.from({ length: from.length - shared }, (_, i) => from.slice(0, from.length - 1 - i)),
+      ...Array.from({ length: path.length - shared }, (_, i) => path.slice(0, shared + 1 + i)),
+    ];
+    let at = 0;
+    for (const [i, text] of frames.entries()) {
+      at += i < from.length - shared ? eraseMs : typeMs;
+      setTimeout(() => (bar.textContent = text), at);
+    }
+  }
 </script>
 
 <style>
