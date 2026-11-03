@@ -25,13 +25,12 @@ const { command, path = '~', href, comment } = Astro.props;
   {command &&
     (href ? (
       <a class="cmd" href={href}>
-        {command}
-        {comment && <span class="comment"># {comment}</span>}
+        {command}<Cursor />{comment && <span class="comment"># {comment}</span>}
       </a>
     ) : (
       <span class="cmd">{command}</span>
     ))}
-  <Cursor />
+  {!href && <Cursor />}
 </p>
 
 <style>
@@ -52,12 +51,22 @@ const { command, path = '~', href, comment } = Astro.props;
   /* inline-block keeps the link's underline off the comment, so only the command looks like the link */
   .comment {
     display: inline-block;
-    margin-left: 1ch;
     color: var(--muted);
   }
 
   /* .current shows the cursor on the prompt that waits for or types its command */
-  .prompt:not(.idle, .current, :has(a:hover, a:focus-visible)) :global(.cursor) {
+  .prompt:not(.idle, .current) > :global(.cursor) {
     display: none;
+  }
+
+  /* A linked command shows its cursor on hover, on the cell between the command and its comment, like
+     a shell cursor before a zsh autosuggestion. It stays in the layout, so the comment doesn't move. */
+  a.cmd > :global(.cursor) {
+    width: 1ch;
+    visibility: hidden;
+  }
+
+  a.cmd:is(:hover, :focus-visible) > :global(.cursor) {
+    visibility: visible;
   }
 </style>
