@@ -22,7 +22,6 @@ const { path } = Astro.props;
   <div class="content">
     <main>
       <slot />
-      <!-- Every page ends on an empty prompt that takes keyboard input -->
       <div class="prompt-end">
         <Prompt path={path} />
       </div>
@@ -33,7 +32,6 @@ const { path } = Astro.props;
 <script>
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const ease = 'cubic-bezier(0.32, 0.72, 0, 1)';
-  // Vim's quit commands, typed into the shell out of habit
   const vimQuitPattern = /^:(q|quit|wq|x|qa|wqa)(!?)$/;
 
   // Every page has exactly one Window
@@ -51,7 +49,6 @@ const { path } = Astro.props;
   const shakeSoft = () => shake([0, -10, 10, -8, 8, -4, 4, 0], 450);
   const shakeHard = () => shake([0, -43, 39, -35, 31, -27, 24, -21, 18, -15, 12, -10, 8, -6, 4, -2, 0], 900);
 
-  // zsh's own message when you exit with jobs still running
   const runningJobs = 'zsh: du har jobber som kjører.';
 
   const reply = (command: string) => {
@@ -71,13 +68,11 @@ const { path } = Astro.props;
     return `zsh: kommando ikke funnet: ${command.split(' ')[0]}`;
   };
 
-  // Like a shell, the command stays above as history with its output, and the empty prompt moves down
   const run = (command: string) => {
     const echo = prompt.cloneNode(true) as HTMLElement;
     echo.querySelector('.cursor')!.remove();
     const output = document.createElement('p');
-    // .shown, since index.astro hides anything in .prompt-end without it while html.typing stays on
-    output.className = 'output shown';
+    output.className = 'output';
     output.textContent = reply(command);
     prompt.before(echo, output);
     input.textContent = '';
@@ -88,30 +83,32 @@ const { path } = Astro.props;
     run('exit');
   });
 
-  // The keys belong to index.astro's typing sequence until it ends. The timeout keeps the key that skips
-  // the sequence from also landing on the prompt.
-  let ready = !document.documentElement.classList.contains('typing');
-  addEventListener('typed', () => setTimeout(() => (ready = true)));
-
-  addEventListener('keydown', (event) => {
-    if (!ready || event.ctrlKey || event.metaKey || event.altKey) return;
+  const onKeydown = (event: KeyboardEvent) => {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
     const line = input.textContent!;
-    // Enter and Space on an empty line keep following links and scrolling the page
-    if (event.key === 'Enter' && line.trim()) {
+    // Only a visible character starts a line, so Enter, Space and Tab keep working on the page until then
+    if (!line && (event.key.length !== 1 || event.key === ' ')) return;
+    if (event.key === 'Enter') {
       run(line.trim());
-    } else if (event.key === 'Escape' && line) {
+    } else if (event.key === 'Escape') {
       input.textContent = '';
-    } else if (event.key === 'Backspace' && line) {
+    } else if (event.key === 'Backspace') {
       input.textContent = line.slice(0, -1);
-    } else if (event.key.length === 1 && (event.key !== ' ' || line)) {
+    } else if (event.key.length === 1) {
       input.textContent = line + event.key;
     } else {
       return;
     }
     event.preventDefault();
-    // A terminal jumps to its prompt when you type
     prompt.scrollIntoView({ block: 'nearest', behavior: reducedMotion.matches ? 'instant' : 'smooth' });
-  });
+  };
+
+  // A listener added while index.astro's skip key is dispatching doesn't receive that key
+  if (document.documentElement.classList.contains('typing')) {
+    addEventListener('typed', () => addEventListener('keydown', onKeydown), { once: true });
+  } else {
+    addEventListener('keydown', onKeydown);
+  }
 
   const isShaded = () => win.classList.contains('shaded');
 
@@ -288,7 +285,8 @@ const { path } = Astro.props;
   }
 
   main {
-    padding: 56px var(--gutter) 72px;
+    --end-padding: 72px;
+    padding: 56px var(--gutter) var(--end-padding);
   }
 
   main :global(section) {
@@ -314,9 +312,8 @@ const { path } = Astro.props;
     margin-top: 56px;
   }
 
-  /* Typing scrolls the prompt into view with the window's bottom padding below it */
   .prompt-end :global(.prompt) {
-    scroll-margin-bottom: 72px;
+    scroll-margin-bottom: var(--end-padding);
   }
 
   .prompt-end :global(.output) {
@@ -339,7 +336,8 @@ const { path } = Astro.props;
     }
 
     main {
-      padding: 32px 16px 48px;
+      --end-padding: 48px;
+      padding: 32px 16px var(--end-padding);
     }
 
     main :global(section) {
