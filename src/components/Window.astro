@@ -1,6 +1,7 @@
 ---
 import { items } from '../fs';
 import Entry from './Entry.astro';
+import Hero from './Hero.astro';
 import Prompt from './Prompt.astro';
 
 interface Props {
@@ -54,10 +55,14 @@ const { path } = Astro.props;
       ))}
     </ul>
   </template>
+  <template class="hero-copy">
+    <Hero printed />
+  </template>
 </div>
 
 <script>
   import { absolute, items, label, resolve, rowKey, type Item, type Text } from '../fs';
+  import { setUpHero } from '../hero';
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const ease = 'cubic-bezier(0.32, 0.72, 0, 1)';
@@ -247,9 +252,44 @@ const { path } = Astro.props;
     return [];
   };
 
+  const heroCopy = win.querySelector<HTMLTemplateElement>('template.hero-copy')!.content;
+
+  const programs: Record<string, () => Element[]> = {
+    '~/hei.sh': () => [heroCopy.firstElementChild!.cloneNode(true) as Element],
+  };
+  const runProgram = (path: string) => programs[path]?.() ?? [];
+
+  const exec = (arg: string) => {
+    const found = find(arg);
+    if (!found) return [line(`zsh: ingen slik fil eller filkatalog: ${arg}`)];
+    const { path, item } = found;
+    if (item.kind === 'dir') return [line(`zsh: er en filkatalog: ${arg}`)];
+    if (!item.executable) return [line(`zsh: tilgang nektet: ${arg}`)];
+    return runProgram(path);
+  };
+
+  const firstCommand = ({ title, body }: Text) => {
+    const lines = [...(title ? [`# ${title}`] : []), ...body.split('\n')].map((text) => text.trim());
+    const at = lines.findIndex((text) => text && !text.startsWith('#'));
+    return at === -1 ? undefined : { lineNumber: at + 1, word: lines[at].split(/\s+/)[0] };
+  };
+
+  const sh = (command: string) => (args: string[]) => {
+    const [arg] = args;
+    if (!arg) return [];
+    const found = find(arg);
+    if (!found) return [line(`${command}: ${arg}: ${missing}`)];
+    const { path, item } = found;
+    if (item.kind === 'dir') return [line(`${command}: ${arg}: Er en filkatalog`)];
+    if (item.executable) return runProgram(path);
+    const first = item.text && firstCommand(item.text);
+    return first ? [line(`${arg}: linje ${first.lineNumber}: ${first.word}: kommando ikke funnet`)] : [];
+  };
+
   const help = () => [
     line(
       [
+        './hei.sh        si hei',
         'ls [-la] [sti]  vis hva som ligger i en mappe',
         'cat <fil>       skriv ut en fil',
         'head <fil>      skriv ut starten av en fil',
@@ -282,6 +322,8 @@ const { path } = Astro.props;
     head: cat('head'),
     cd,
     pwd: () => [line(absolute(cwd))],
+    sh: sh('sh'),
+    bash: sh('bash'),
     help,
     exit,
   };
@@ -304,11 +346,16 @@ const { path } = Astro.props;
       log.replaceChildren();
       return;
     }
-    const output = !name ? [] : (commands[name]?.(args) ?? [line(`zsh: kommando ikke funnet: ${name}`)]);
+    const output = !name
+      ? []
+      : name.includes('/')
+        ? exec(name)
+        : (commands[name]?.(args) ?? [line(`zsh: kommando ikke funnet: ${name}`)]);
     const entry = document.createElement('div');
     entry.className = 'entry';
     entry.append(echo, ...output);
     log.append(entry);
+    for (const hero of entry.querySelectorAll('.hero')) setUpHero(hero)();
   };
 
   field.addEventListener('input', () => {

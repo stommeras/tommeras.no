@@ -1,13 +1,21 @@
 ---
+interface Props {
+  printed?: boolean;
+}
+
+const { printed = false } = Astro.props;
 const title = 'TØMMERÅS';
+const Title = printed ? 'p' : 'h1';
 ---
 
-<header class="hero">
-  <h1 aria-label={title}>
+<header class:list={['hero', { printed }]}>
+  <Title class="name" aria-label={printed ? undefined : title}>
+    {/* aria-label doesn't name a <p>, so the printed hero carries its title as hidden text */}
+    {printed && <span class="visually-hidden">{title}</span>}
     <span aria-hidden="true" data-value={title}>
       {title}
     </span>
-  </h1>
+  </Title>
   <p class="subtitle">
     En av{' '}
     <span class="magic">
@@ -32,45 +40,16 @@ const title = 'TØMMERÅS';
 </header>
 
 <script>
-  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  import { setUpHero } from '../hero';
 
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ';
-  const h1 = document.querySelector<HTMLElement>('.hero h1')!;
-  const target = h1.querySelector<HTMLElement>('[data-value]')!;
-  const value = target.dataset.value!;
-  let interval: number | undefined;
-
-  function scramble() {
-    if (reducedMotion) return;
-    let iteration = 0;
-    clearInterval(interval);
-    interval = setInterval(() => {
-      target.textContent = [...value]
-        .map((letter, index) => (index < iteration ? letter : letters[Math.floor(Math.random() * letters.length)]))
-        .join('');
-      if (iteration >= value.length) clearInterval(interval);
-      iteration += 1 / 3;
-    }, 30);
-  }
-
-  h1.addEventListener('pointerenter', scramble);
-  // While the page types out its commands, the scramble waits until ./hei.sh has run
-  if (document.documentElement.classList.contains('typing')) {
-    addEventListener('hei', scramble, { once: true });
-  } else {
-    scramble();
-  }
-
-  const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
-  for (const [i, star] of document.querySelectorAll<HTMLElement>('.hero .star').entries()) {
-    const move = () => {
-      star.style.left = `${rand(-10, 100)}%`;
-      star.style.top = `${rand(-40, 80)}%`;
-      star.style.rotate = `${rand(0, 360)}deg`;
-    };
-    move();
-    star.addEventListener('animationiteration', move);
-    star.style.animationDelay = `calc(var(--pulse) * ${i} / 3)`;
+  const pageHero = document.querySelector('.hero');
+  if (pageHero) {
+    const scramble = setUpHero(pageHero);
+    if (document.documentElement.classList.contains('typing')) {
+      addEventListener('hei', scramble, { once: true });
+    } else {
+      scramble();
+    }
   }
 </script>
 
@@ -80,7 +59,7 @@ const title = 'TØMMERÅS';
     padding: 72px 0;
   }
 
-  h1 {
+  .name {
     margin: 0;
     font-size: clamp(2.75rem, 10vw, 8rem);
     font-weight: 800;
@@ -149,14 +128,16 @@ const title = 'TØMMERÅS';
     }
   }
 
-  /* When ./hei.sh runs, the title fades in under the scramble, and the subtitle follows as the
-     scramble settles (about 700 ms). Only during the typed sequence, which reduced motion turns off. */
-  :global(html.typing) .hero:global(.shown) h1 {
-    animation: hero-in 300ms ease-out both;
-  }
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html.typing) .hero:global(.shown) .name,
+    .printed .name {
+      animation: hero-in 300ms ease-out both;
+    }
 
-  :global(html.typing) .hero:global(.shown) .subtitle {
-    animation: hero-in 500ms ease-out 600ms both;
+    :global(html.typing) .hero:global(.shown) .subtitle,
+    .printed .subtitle {
+      animation: hero-in 500ms ease-out 600ms both;
+    }
   }
 
   @keyframes hero-in {
