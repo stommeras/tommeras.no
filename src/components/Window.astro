@@ -45,7 +45,6 @@ const { path } = Astro.props;
 <script>
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const ease = 'cubic-bezier(0.32, 0.72, 0, 1)';
-  const vimQuitPattern = /^:(q|quit|wq|x|qa|wqa)(!?)$/;
 
   // Every page has exactly one Window
   const win = document.querySelector<HTMLElement>('.window')!;
@@ -55,24 +54,16 @@ const { path } = Astro.props;
   const input = document.createElement('span');
   prompt.querySelector('.cursor')!.before(input);
 
-  const shake = (offsets: number[], duration: number) => {
+  const shake = () => {
     if (reducedMotion.matches) return;
-    win.animate({ translate: offsets.map((x) => `${x}px`) }, duration);
+    win.animate({ translate: ['0px', '-10px', '10px', '-8px', '8px', '-4px', '4px', '0px'] }, 450);
   };
-  const shakeSoft = () => shake([0, -10, 10, -8, 8, -4, 4, 0], 450);
-  const shakeHard = () => shake([0, -43, 39, -35, 31, -27, 24, -21, 18, -15, 12, -10, 8, -6, 4, -2, 0], 900);
 
   const reply = (command: string) => {
-    const vimQuit = command.match(vimQuitPattern);
-    if (vimQuit?.[2]) {
-      shakeHard();
-      return 'Godt forsøk.';
-    }
     if (command === 'exit') {
-      shakeSoft();
+      shake();
       return 'zsh: du har jobber som kjører.';
     }
-    if (vimQuit) shakeSoft();
     return `zsh: kommando ikke funnet: ${command.split(' ')[0]}`;
   };
 
@@ -86,7 +77,7 @@ const { path } = Astro.props;
     input.textContent = '';
   };
 
-  close.addEventListener('click', shakeSoft);
+  close.addEventListener('click', shake);
 
   const onKeydown = (event: KeyboardEvent) => {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
