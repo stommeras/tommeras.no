@@ -1,4 +1,4 @@
-import { absolute, homeDir, items, label, resolve, rowKey, user, type Item, type Text } from './fs';
+import { absolute, homeDir, host, items, label, resolve, rowKey, user, type Item, type Text } from './fs';
 
 // A word is unquoted text and quoted parts side by side. A quote nobody closes runs to the end of the line.
 const words = /(?:[^\s"']+|"[^"]*"?|'[^']*'?)+/g;
@@ -182,7 +182,8 @@ export const createShell = (terminal: Terminal) => {
     if (!arg) return [line('open: mangler operand')];
     const href = find(arg)?.item.href;
     if (!href) return [line(`open: kan ikke åpne ${arg}`)];
-    location.assign(href);
+    // Like cd, opening the page you're on keeps it instead of reloading it
+    if (href !== terminal.page) location.assign(href);
     return [];
   };
 
@@ -229,9 +230,9 @@ export const createShell = (terminal: Terminal) => {
     const short = options.filter((option) => !option.startsWith('--')).join('');
     const recursive = /[rR]/.test(short) || options.includes('--recursive');
     const force = short.includes('f') || options.includes('--force');
-    if (recursive && force) terminal.shakeHard();
     const paths = args.filter((arg) => !options.includes(arg));
     if (!paths.length) return [line('rm: mangler operand')];
+    if (recursive && force) terminal.shakeHard();
     return paths.map((path) => line(`rm: kan ikke fjerne '${path}': Skrivebeskyttet filsystem`));
   };
 
@@ -248,7 +249,6 @@ export const createShell = (terminal: Terminal) => {
       ['Tema', matchMedia('(prefers-color-scheme: dark)').matches ? 'mørk' : 'lys'],
     ].filter((row): row is [string, string] => !!row[1]);
 
-    const host = `${user}@tommeras`;
     const info = line('', 'output pre');
     const heading = document.createElement('span');
     heading.className = 'fetch-host';
@@ -274,12 +274,12 @@ export const createShell = (terminal: Terminal) => {
     }
 
     // A logo would go in a column before the info
-    const fetch = document.createElement('div');
-    fetch.className = 'fetch';
+    const layout = document.createElement('div');
+    layout.className = 'fetch';
     const column = document.createElement('div');
     column.append(info, swatches);
-    fetch.append(column);
-    return [fetch];
+    layout.append(column);
+    return [layout];
   };
 
   const sl = () => {
@@ -314,7 +314,7 @@ export const createShell = (terminal: Terminal) => {
 
   const editor = () => [line('Du kommer ikke ut igjen.')];
   const printHelp = () => [line(help.join('\n'), 'output pre')];
-  const date = new Intl.DateTimeFormat('nb-NO', { dateStyle: 'full', timeStyle: 'long' });
+  const dateFormat = new Intl.DateTimeFormat('nb-NO', { dateStyle: 'full', timeStyle: 'long' });
 
   const commands: Record<string, (args: string[]) => Element[]> = {
     ls,
@@ -339,7 +339,7 @@ export const createShell = (terminal: Terminal) => {
     man,
     exit,
     whoami: () => [line(user)],
-    date: () => [line(date.format(new Date()))],
+    date: () => [line(dateFormat.format(new Date()))],
     echo: (args) => [line(args.join(' '), 'output pre')],
     sudo,
     rm,

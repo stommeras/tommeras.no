@@ -1,5 +1,5 @@
 ---
-import { items, user } from '../fs';
+import { host, items } from '../fs';
 import Entry from './Entry.astro';
 import Hero from './Hero.astro';
 import Prompt from './Prompt.astro';
@@ -20,7 +20,7 @@ const { path } = Astro.props;
       <i></i>
     </span>
     <span class="bar-title">
-      {user}@tommeras: <span class="bar-path">{path}</span>
+      {host}: <span class="bar-path">{path}</span>
     </span>
     <span class="bar-right">zsh</span>
   </div>

@@ -133,6 +133,7 @@ export const byPath = (path: string) => items.get(path)!;
 
 // The visitor, whom the prompt runs as
 export const user = 'gjest';
+export const host = `${user}@tommeras`;
 export const homeDir = `/home/${user}`;
 export const absolute = (path: string) => `${homeDir}${path.slice(1)}`;
 
