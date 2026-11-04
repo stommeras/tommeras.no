@@ -13,9 +13,23 @@ const { label } = Astro.props;
 </div>
 
 <script>
-  // Clips start paused with controls and only play on their own for visitors who allow motion
-  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    for (const video of document.querySelectorAll<HTMLVideoElement>('.shots video')) video.play().catch(() => {});
+  // Clips play on their own without controls, and a click, Space or Enter pauses them. Visitors who ask for reduced
+  // motion get the controls instead, with the clip paused on its poster.
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  for (const video of document.querySelectorAll<HTMLVideoElement>('.shots video')) {
+    if (reducedMotion) {
+      video.controls = true;
+      continue;
+    }
+    const toggle = () => (video.paused ? video.play() : video.pause());
+    video.tabIndex = 0;
+    video.addEventListener('click', toggle);
+    video.addEventListener('keydown', (event) => {
+      if (event.key !== ' ' && event.key !== 'Enter') return;
+      event.preventDefault();
+      toggle();
+    });
+    video.play().catch(() => {});
   }
 </script>
 
@@ -35,6 +49,10 @@ const { label } = Astro.props;
     height: auto;
     border: 1px solid var(--line);
     border-radius: 12px;
+  }
+
+  .shots :global(video:not([controls])) {
+    cursor: pointer;
   }
 
   @media (max-width: 600px) {
