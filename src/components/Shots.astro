@@ -1,5 +1,4 @@
 ---
-// A row of screenshots or clips for a project page, one equal column per <img> or <video> in the slot
 interface Props {
   label: string;
 }
@@ -13,8 +12,6 @@ const { label } = Astro.props;
 </div>
 
 <script>
-  // Clips play on their own without controls, and a click, Space or Enter pauses them. Visitors who ask for reduced
-  // motion get the controls instead, with the clip paused on its poster.
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   for (const video of document.querySelectorAll<HTMLVideoElement>('.shots video')) {
     if (reducedMotion) {

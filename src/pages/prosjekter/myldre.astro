@@ -14,7 +14,6 @@ const readme = byPath(`${path}/README.md`).text!;
   description="Myldre er et 3D-kart over Norge der busser, ferjer og tog glir langs rutene sine på ekte terreng."
 >
   <Window path={path}>
-    <!-- The cd that the myldre/ link on the home page stands for -->
     <Prompt command="cd prosjekter/myldre" />
     <Prompt path={path} command="cat README.md" />
     <h1 class="title">
