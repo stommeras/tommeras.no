@@ -20,13 +20,14 @@ const { label } = Astro.props;
     }
     const toggle = () => (video.paused ? video.play() : video.pause());
     video.tabIndex = 0;
+    video.setAttribute('aria-description', 'Mellomrom eller Enter pauser og spiller av.');
     video.addEventListener('click', toggle);
     video.addEventListener('keydown', (event) => {
       if (event.key !== ' ' && event.key !== 'Enter') return;
       event.preventDefault();
       toggle();
     });
-    video.play().catch(() => {});
+    video.play().catch(() => (video.controls = true));
   }
 </script>
 
