@@ -1,5 +1,5 @@
 ---
-// A row of screenshots for a project page, one equal column per <img> in the slot
+// A row of screenshots or clips for a project page, one equal column per <img> or <video> in the slot
 interface Props {
   label: string;
 }
@@ -12,6 +12,13 @@ const { label } = Astro.props;
   <slot />
 </div>
 
+<script>
+  // Clips start paused with controls and only play on their own for visitors who allow motion
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    for (const video of document.querySelectorAll<HTMLVideoElement>('.shots video')) video.play().catch(() => {});
+  }
+</script>
+
 <style>
   .shots {
     display: grid;
@@ -21,7 +28,8 @@ const { label } = Astro.props;
     margin-top: 24px;
   }
 
-  .shots :global(img) {
+  .shots :global(img),
+  .shots :global(video) {
     display: block;
     width: 100%;
     height: auto;
@@ -41,7 +49,8 @@ const { label } = Astro.props;
       grid-auto-columns: 100%;
     }
 
-    .shots :global(img) {
+    .shots :global(img),
+    .shots :global(video) {
       scroll-snap-align: start;
     }
   }

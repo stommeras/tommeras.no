@@ -1,0 +1,122 @@
+---
+import Prompt from '../../components/Prompt.astro';
+import Shots from '../../components/Shots.astro';
+import Window from '../../components/Window.astro';
+import { byPath } from '../../fs';
+import Layout from '../../layouts/Layout.astro';
+
+const path = '~/prosjekter/myldre';
+const readme = byPath(`${path}/README.md`).text!;
+---
+
+<Layout
+  title="Myldre | Tømmerås"
+  description="Myldre er et 3D-kart over Norge der busser, ferjer og tog glir langs rutene sine på ekte terreng."
+>
+  <Window path={path}>
+    <!-- The cd that the myldre/ link on the home page stands for -->
+    <Prompt command="cd prosjekter/myldre" />
+    <Prompt path={path} command="cat README.md" />
+    <h1 class="title">
+      <span aria-hidden="true"># </span>
+      {readme.title}
+    </h1>
+    <p>{readme.body}</p>
+    <p>
+      Zoomet ut er hvert kjøretøy en lysende prikk med et spor som blekner, med én farge per type. Zoomer du inn på en
+      by, vipper kartet, og prikkene blir små 3D-modeller av busser, ferjer og tog. Klikker du på et kjøretøy, ser du
+      linje, destinasjon og forsinkelse.
+    </p>
+    <Shots label="Opptak fra Myldre">
+      <video
+        src="/prosjekter/myldre-norge.mp4"
+        poster="/prosjekter/myldre-norge.jpg"
+        width="1280"
+        height="800"
+        muted
+        loop
+        playsinline
+        controls
+        preload="none"
+        aria-label="Hele Norge en morgen i rushtiden, avspilt i 60 ganger farten: tusenvis av lysende prikker beveger seg langs kysten og rundt byene."
+      ></video>
+      <video
+        src="/prosjekter/myldre-bergen.mp4"
+        poster="/prosjekter/myldre-bergen.jpg"
+        width="1280"
+        height="800"
+        muted
+        loop
+        playsinline
+        controls
+        preload="none"
+        aria-label="Bergen sentrum skrått ovenfra i 10 ganger farten: busser glir gjennom gatene med lysende spor bak seg."
+      ></video>
+    </Shots>
+
+    <section>
+      <h2>
+        <span aria-hidden="true">## </span>Status
+      </h2>
+      <p>Under arbeid. Myldre kjører foreløpig bare lokalt og er ikke publisert ennå, så her er opptak i stedet for en demo.</p>
+    </section>
+
+    <section>
+      <h2>
+        <span aria-hidden="true">## </span>Teknologi
+      </h2>
+      <p>SolidJS · TypeScript · MapLibre · deck.gl · Entur</p>
+    </section>
+
+    <section>
+      <h2>
+        <span aria-hidden="true">## </span>Valg underveis
+      </h2>
+
+      <h3>
+        <span aria-hidden="true">### </span>Opptak i stedet for direkte
+      </h3>
+      <p>
+        Kartet spiller av innspilt trafikk i opptil 120 ganger farten. I sanntid er det for få kjøretøy i bevegelse til
+        at kartet ser levende ut, men hele Norge i 60x myldrer.
+      </p>
+
+      <h3>
+        <span aria-hidden="true">### </span>35 sekunder bak
+      </h3>
+      <p>
+        Hvert kjøretøy vises 35 sekunder bak sanntid. Da har neste posisjon som regel kommet, og kjøretøyet kan gli
+        langs ruta mellom to meldinger i stedet for å hoppe.
+      </p>
+
+      <h3>
+        <span aria-hidden="true">### </span>Gjennom tunnelen
+      </h3>
+      <p>
+        I en tunnel sender et kjøretøy samme posisjon om og om igjen. Myldre regner det som ingen posisjon og lar
+        kjøretøyet gli gjennom hele tunnelen.
+      </p>
+    </section>
+
+    <div class="back">
+      <Prompt path={path} command="cd .." href="/prosjekter" comment="alle prosjekter" />
+      <Prompt path={path} command="cd ~" href="/" comment="forsiden" />
+    </div>
+  </Window>
+</Layout>
+
+<style>
+  h3 {
+    margin: 32px 0 0;
+    font-size: 1.0625rem;
+  }
+
+  p {
+    max-width: 64ch;
+    margin: 12px 0 0;
+  }
+
+  .back {
+    margin-top: 56px;
+  }
+</style>
