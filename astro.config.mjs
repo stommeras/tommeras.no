@@ -15,6 +15,8 @@ const inlineScriptHashes = globSync('src/**/*.astro').flatMap((file) =>
 
 export default defineConfig({
   site: 'https://tommeras.no',
+  // The site renders no Markdown or <Code>. Shiki's default would only trigger a CSP warning
+  markdown: { syntaxHighlight: false },
   // Hashes every inline script and style into a CSP <meta>. vercel.json sends the directives a <meta> can't carry
   security: {
     csp: {
