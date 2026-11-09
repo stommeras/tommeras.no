@@ -1,5 +1,4 @@
 ---
-// A row of screenshots for a project page, one equal column per <img> in the slot
 interface Props {
   label: string;
 }
@@ -12,6 +11,26 @@ const { label } = Astro.props;
   <slot />
 </div>
 
+<script>
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  for (const video of document.querySelectorAll<HTMLVideoElement>('.shots video')) {
+    if (reducedMotion) {
+      video.controls = true;
+      continue;
+    }
+    const toggle = () => (video.paused ? video.play() : video.pause());
+    video.tabIndex = 0;
+    video.setAttribute('aria-description', 'Mellomrom eller Enter pauser og spiller av.');
+    video.addEventListener('click', toggle);
+    video.addEventListener('keydown', (event) => {
+      if (event.key !== ' ' && event.key !== 'Enter') return;
+      event.preventDefault();
+      toggle();
+    });
+    video.play().catch(() => (video.controls = true));
+  }
+</script>
+
 <style>
   .shots {
     display: grid;
@@ -21,12 +40,17 @@ const { label } = Astro.props;
     margin-top: 24px;
   }
 
-  .shots :global(img) {
+  .shots :global(img),
+  .shots :global(video) {
     display: block;
     width: 100%;
     height: auto;
     border: 1px solid var(--line);
     border-radius: 12px;
+  }
+
+  .shots :global(video:not([controls])) {
+    cursor: pointer;
   }
 
   @media (max-width: 600px) {
@@ -41,7 +65,8 @@ const { label } = Astro.props;
       grid-auto-columns: 100%;
     }
 
-    .shots :global(img) {
+    .shots :global(img),
+    .shots :global(video) {
       scroll-snap-align: start;
     }
   }
