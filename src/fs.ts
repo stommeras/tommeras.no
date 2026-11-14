@@ -94,7 +94,7 @@ export const home: Item = {
           kind: 'dir',
           icon: 'folder',
           href: '/prosjekter/figment',
-          desc: 'en spillkonsoll som aldri fantes',
+          desc: 'fantasikonsoll skrevet fra bunnen av',
           children: [
             readme(
               'Figment',
