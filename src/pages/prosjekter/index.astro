@@ -26,14 +26,27 @@ const rabra = byPath(`${path}/rabra/README.md`).text!;
         {figment.title}
       </h2>
       <p>{figment.body}</p>
-      <Shots label="Skjermbilde fra Figment">
+      <Shots label="Skjermbilder fra Figment">
         <img
-          class="pixels"
-          src="/prosjekter/figment-rogue.png"
-          width="512"
-          height="512"
+          src="/prosjekter/figment-konsoll.png"
+          width="1134"
+          height="1952"
           loading="lazy"
-          alt="Det første spillet på Figment: en figur i en hule av murstein, med et grønt monster, et hjerte og en trapp ned."
+          alt="Figment i nettleseren: tittelen øverst, en grå håndholdt konsoll med grønn skjerm etter selvtesten, knapper for Rogue, Tangle, Demo og Self-test, og tastene som styrer den."
+        />
+        <img
+          src="/prosjekter/figment-rogue.png"
+          width="1096"
+          height="1887"
+          loading="lazy"
+          alt="Rogue på Figment: en figur i en hule av murstein, med et grønt monster, et hjerte og en trapp ned."
+        />
+        <img
+          src="/prosjekter/figment-tangle.png"
+          width="1096"
+          height="1887"
+          loading="lazy"
+          alt="Tangle på Figment: en gul og en blå strek som svinger over skjermen, begge med et lite hull. Blå leder 2 mot 1."
         />
       </Shots>
       <div class="more">
@@ -132,11 +145,6 @@ const rabra = byPath(`${path}/rabra/README.md`).text!;
   p {
     max-width: 64ch;
     margin: 12px 0 0;
-  }
-
-  .pixels {
-    max-width: 512px;
-    image-rendering: pixelated;
   }
 
   .more {

@@ -19,14 +19,27 @@ const readme = byPath(`${path}/README.md`).text!;
       {readme.title}
     </h1>
     <p>{readme.body}</p>
-    <Shots label="Skjermbilde fra Figment">
+    <Shots label="Skjermbilder fra Figment">
       <img
-        class="pixels"
-        src="/prosjekter/figment-rogue.png"
-        width="512"
-        height="512"
+        src="/prosjekter/figment-konsoll.png"
+        width="1134"
+        height="1952"
         loading="lazy"
-        alt="Det første spillet på Figment: en figur i en hule av murstein, med et grønt monster, et hjerte og en trapp ned."
+        alt="Figment i nettleseren: tittelen øverst, en grå håndholdt konsoll med grønn skjerm etter selvtesten, knapper for Rogue, Tangle, Demo og Self-test, og tastene som styrer den."
+      />
+      <img
+        src="/prosjekter/figment-rogue.png"
+        width="1096"
+        height="1887"
+        loading="lazy"
+        alt="Rogue på Figment: en figur i en hule av murstein, med et grønt monster, et hjerte og en trapp ned."
+      />
+      <img
+        src="/prosjekter/figment-tangle.png"
+        width="1096"
+        height="1887"
+        loading="lazy"
+        alt="Tangle på Figment: en gul og en blå strek som svinger over skjermen, begge med et lite hull. Blå leder 2 mot 1."
       />
     </Shots>
     <p>
@@ -35,7 +48,7 @@ const readme = byPath(`${path}/README.md`).text!;
         -> figment.tommeras.no
       </span>
     </p>
-    <p>Siden starter med en selvtest. Velg Rogue under skjermen for å spille, og styr med piltastene.</p>
+    <p>Velg Rogue eller Tangle under konsollen for å spille.</p>
     <p>
       <a href="https://github.com/stommeras/figment">Kildekoden</a>{' '}
       <span class="target" aria-hidden="true">
@@ -52,8 +65,13 @@ const readme = byPath(`${path}/README.md`).text!;
         <li>Assembleren har etiketter, konstanter og lokale etiketter.</li>
         <li>Skjermen vises på en nettside og i terminalen.</li>
         <li>Konsollen leser taster, piper, gir tilfeldige tall og kjører 60 bilder i sekundet.</li>
+        <li>Nettsiden er tegnet som en håndholdt konsoll, med en knapp for hvert program. Knappene på konsollen virker med mus og berøring.</li>
       </ul>
-      <p>Det første spillet som prøves ut er en roguelike, og det er så vidt påbegynt.</p>
+      <p>
+        Det første spillet som prøves ut er Rogue, en roguelike som så vidt er påbegynt. Tangle er et spill for to på samme
+        tastatur. Hver spiller styrer en strek som aldri stopper, og den som kjører inn i en vegg eller en strek, gir
+        motstanderen et poeng.
+      </p>
     </section>
 
     <section>
@@ -80,12 +98,6 @@ const readme = byPath(`${path}/README.md`).text!;
     max-width: 64ch;
     margin: 12px 0 0;
     padding-left: 2ch;
-  }
-
-  /* The screen is 128 × 128 pixels, so it scales up without smoothing and stops at four times its size */
-  .pixels {
-    max-width: 512px;
-    image-rendering: pixelated;
   }
 
   .target {
