@@ -82,6 +82,19 @@ export const home: Item = {
       desc: 'alle prosjekter med skjermbilder',
       children: [
         {
+          name: 'figment',
+          kind: 'dir',
+          icon: 'folder',
+          href: '/prosjekter/figment',
+          desc: 'en spillkonsoll som aldri fantes',
+          children: [
+            readme(
+              'Figment',
+              'En fantasikonsoll: en oppdiktet 8-bits maskin med 16 registre, 32 KB minne, en skjerm på 128 × 128 piksler med 16 farger og en pipelyd. Alt er skrevet fra bunnen av i Zig, både emulatoren som kjører maskinen og assembleren som lager programmene til den. Emulatoren kompileres til WebAssembly og kjører i nettleseren eller i terminalen.',
+            ),
+          ],
+        },
+        {
           name: 'lab',
           kind: 'link',
           icon: 'flask',

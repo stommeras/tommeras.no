@@ -6,6 +6,7 @@ import { byPath } from '../../fs';
 import Layout from '../../layouts/Layout.astro';
 
 const path = '~/prosjekter';
+const figment = byPath(`${path}/figment/README.md`).text!;
 const proof = byPath(`${path}/proof/README.md`).text!;
 const rabra = byPath(`${path}/rabra/README.md`).text!;
 ---
@@ -16,8 +17,30 @@ const rabra = byPath(`${path}/rabra/README.md`).text!;
     <Prompt command="cd prosjekter" />
     <h1 class="visually-hidden">Prosjekter</h1>
 
+    <!-- head shows the start of each README, so the text here matches the start of the project page -->
     <section>
-      <!-- head shows the start of each README, so the text here matches the start of the project page -->
+      <Prompt path={path} command="head figment/README.md" />
+      <h2 class="title">
+        <span aria-hidden="true"># </span>
+        {figment.title}
+      </h2>
+      <p>{figment.body}</p>
+      <Shots label="Skjermbilde fra Figment">
+        <img
+          class="pixels"
+          src="/prosjekter/figment-rogue.png"
+          width="512"
+          height="512"
+          loading="lazy"
+          alt="Det første spillet på Figment: en figur i en hule av murstein, med et grønt monster, et hjerte og en trapp ned."
+        />
+      </Shots>
+      <div class="more">
+        <Prompt path={path} command="cd figment" href="/prosjekter/figment" comment="les mer" />
+      </div>
+    </section>
+
+    <section>
       <Prompt path={path} command="head proof/README.md" />
       <h2 class="title">
         <span aria-hidden="true"># </span>
@@ -83,6 +106,11 @@ const rabra = byPath(`${path}/rabra/README.md`).text!;
   p {
     max-width: 64ch;
     margin: 12px 0 0;
+  }
+
+  .pixels {
+    max-width: 512px;
+    image-rendering: pixelated;
   }
 
   .more {
