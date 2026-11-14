@@ -82,6 +82,14 @@ export const home: Item = {
       desc: 'alle prosjekter med skjermbilder',
       children: [
         {
+          name: 'lab',
+          kind: 'link',
+          icon: 'flask',
+          href: 'https://lab.tommeras.no',
+          target: 'lab.tommeras.no',
+          desc: 'eksperimenter og skisser',
+        },
+        {
           name: 'figment',
           kind: 'dir',
           icon: 'folder',
@@ -95,12 +103,17 @@ export const home: Item = {
           ],
         },
         {
-          name: 'lab',
-          kind: 'link',
-          icon: 'flask',
-          href: 'https://lab.tommeras.no',
-          target: 'lab.tommeras.no',
-          desc: 'eksperimenter og skisser',
+          name: 'myldre',
+          kind: 'dir',
+          icon: 'folder',
+          href: '/prosjekter/myldre',
+          desc: 'kollektivtrafikk i 3D (under arbeid)',
+          children: [
+            readme(
+              'Myldre',
+              'Et 3D-kart over Norge der busser, ekspressbusser, ferjer og tog glir langs rutene sine på ekte terreng, med posisjoner fra Entur. Kartet spiller av et opptak i høy fart, så et helt morgenrush får plass på noen minutter.',
+            ),
+          ],
         },
         {
           name: 'proof',

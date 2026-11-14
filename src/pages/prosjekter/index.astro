@@ -7,6 +7,7 @@ import Layout from '../../layouts/Layout.astro';
 
 const path = '~/prosjekter';
 const figment = byPath(`${path}/figment/README.md`).text!;
+const myldre = byPath(`${path}/myldre/README.md`).text!;
 const proof = byPath(`${path}/proof/README.md`).text!;
 const rabra = byPath(`${path}/rabra/README.md`).text!;
 ---
@@ -37,6 +38,31 @@ const rabra = byPath(`${path}/rabra/README.md`).text!;
       </Shots>
       <div class="more">
         <Prompt path={path} command="cd figment" href="/prosjekter/figment" comment="les mer" />
+      </div>
+    </section>
+
+    <section>
+      <Prompt path={path} command="head myldre/README.md" />
+      <h2 class="title">
+        <span aria-hidden="true"># </span>
+        {myldre.title}
+      </h2>
+      <p>{myldre.body}</p>
+      <Shots label="Opptak fra Myldre">
+        <video
+          src="/prosjekter/myldre-norge.mp4"
+          poster="/prosjekter/myldre-norge.jpg"
+          width="1280"
+          height="800"
+          muted
+          loop
+          playsinline
+          preload="none"
+          aria-label="Hele Norge en morgen i rushtiden, avspilt i 60 ganger farten: tusenvis av lysende prikker beveger seg langs kysten og rundt byene."
+        ></video>
+      </Shots>
+      <div class="more">
+        <Prompt path={path} command="cd myldre" href="/prosjekter/myldre" comment="les mer" />
       </div>
     </section>
 
