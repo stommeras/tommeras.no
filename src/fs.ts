@@ -90,6 +90,19 @@ export const home: Item = {
           desc: 'eksperimenter og skisser',
         },
         {
+          name: 'figment',
+          kind: 'dir',
+          icon: 'folder',
+          href: '/prosjekter/figment',
+          desc: 'fantasikonsoll skrevet fra bunnen av',
+          children: [
+            readme(
+              'Figment',
+              'En fantasikonsoll: en oppdiktet 8-bits maskin med 16 registre, 32 KB minne, en skjerm på 128 × 128 piksler med 16 farger og en pipelyd. Alt er skrevet fra bunnen av i Zig, både emulatoren som kjører maskinen og assembleren som lager programmene til den. Emulatoren kompileres til WebAssembly og kjører i nettleseren eller i terminalen.',
+            ),
+          ],
+        },
+        {
           name: 'myldre',
           kind: 'dir',
           icon: 'folder',

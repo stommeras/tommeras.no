@@ -1,0 +1,100 @@
+---
+import Prompt from '../../components/Prompt.astro';
+import Shots from '../../components/Shots.astro';
+import Window from '../../components/Window.astro';
+import { byPath } from '../../fs';
+import Layout from '../../layouts/Layout.astro';
+
+const path = '~/prosjekter/figment';
+const readme = byPath(`${path}/README.md`).text!;
+---
+
+<Layout title="Figment | Tømmerås" description="Figment er en oppdiktet 8-bits spillkonsoll, skrevet fra bunnen av i Zig.">
+  <Window path={path}>
+    <!-- The cd that the figment/ link on the home page stands for -->
+    <Prompt command="cd prosjekter/figment" />
+    <Prompt path={path} command="cat README.md" />
+    <h1 class="title">
+      <span aria-hidden="true"># </span>
+      {readme.title}
+    </h1>
+    <p>{readme.body}</p>
+    <Shots label="Skjermbilde fra Figment">
+      <img
+        class="pixels"
+        src="/prosjekter/figment-rogue.png"
+        width="512"
+        height="512"
+        loading="lazy"
+        alt="Det første spillet på Figment: en figur i en hule av murstein, med et grønt monster, et hjerte og en trapp ned."
+      />
+    </Shots>
+    <p>
+      <a href="https://figment.tommeras.no">Prøv den</a>{' '}
+      <span class="target" aria-hidden="true">
+        -> figment.tommeras.no
+      </span>
+    </p>
+    <p>Siden starter med en selvtest. Velg Rogue under skjermen for å spille, og styr med piltastene.</p>
+    <p>
+      <a href="https://github.com/stommeras/figment">Kildekoden</a>{' '}
+      <span class="target" aria-hidden="true">
+        -> github.com/stommeras/figment
+      </span>
+    </p>
+
+    <section>
+      <h2>
+        <span aria-hidden="true">## </span>Så langt
+      </h2>
+      <ul>
+        <li>Prosessoren kjører hele instruksjonssettet.</li>
+        <li>Assembleren har etiketter, konstanter og lokale etiketter.</li>
+        <li>Skjermen vises på en nettside og i terminalen.</li>
+        <li>Konsollen leser taster, piper, gir tilfeldige tall og kjører 60 bilder i sekundet.</li>
+      </ul>
+      <p>Det første spillet som prøves ut er en roguelike, og det er så vidt påbegynt.</p>
+    </section>
+
+    <section>
+      <h2>
+        <span aria-hidden="true">## </span>Teknologi
+      </h2>
+      <p>Zig · WebAssembly · egen assembler</p>
+    </section>
+
+    <div class="back">
+      <Prompt path={path} command="cd .." href="/prosjekter" comment="alle prosjekter" />
+      <Prompt path={path} command="cd ~" href="/" comment="forsiden" />
+    </div>
+  </Window>
+</Layout>
+
+<style>
+  p {
+    max-width: 64ch;
+    margin: 12px 0 0;
+  }
+
+  ul {
+    max-width: 64ch;
+    margin: 12px 0 0;
+    padding-left: 2ch;
+  }
+
+  /* The screen is 128 × 128 pixels, so it scales up without smoothing and stops at four times its size */
+  .pixels {
+    max-width: 512px;
+    image-rendering: pixelated;
+  }
+
+  .target {
+    color: var(--muted);
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
+
+  .back {
+    margin-top: 56px;
+  }
+</style>
