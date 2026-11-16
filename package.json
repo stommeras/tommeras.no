@@ -8,7 +8,7 @@
     "preview": "astro preview",
     "test": "bun test",
     "format": "prettier --write .",
-    "screenshots": "bun scripts/screenshots.ts"
+    "screenshots": "node scripts/screenshots.ts"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

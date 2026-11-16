@@ -1,5 +1,6 @@
 // Retakes the project screenshots in public/prosjekter/ from the public demos. Run it by hand with
 // `bun run screenshots` after a demo's UI changes, and look over the new images before committing them.
+// The script runs under Node, because Playwright hangs launching Chromium under Bun on Windows.
 import { chromium, type Page } from 'playwright';
 
 // The sizes the project pages expect: phone shots are 780×1688 and desktop shots 1920×1200
@@ -34,7 +35,7 @@ const shots: Shot[] = [
     device: phone,
     // The "Try this" box isn't in the image. Skipped when the demo no longer shows it, so the run goes on.
     setup: async (page) => {
-      const dismiss = page.getByRole('button', { name: 'Dismiss' });
+      const dismiss = page.getByRole('button', { name: 'Lukk' });
       if (await dismiss.isVisible()) await dismiss.click();
     },
   },
