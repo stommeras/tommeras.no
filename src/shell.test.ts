@@ -1,5 +1,40 @@
 import { expect, test } from 'bun:test';
-import { parse } from './shell';
+import { complete, parse } from './shell';
+
+const commands = ['cat', 'cd', 'clear', 'ls'];
+
+test('complete fills in a unique command, path, or directory', () => {
+  expect(complete('~', commands, 'l')).toEqual({ completed: 'ls ', options: [] });
+  expect(complete('~', commands, 'cat om')).toEqual({ completed: 'cat om-meg.md ', options: [] });
+  expect(complete('~', commands, 'ls pro')).toEqual({ completed: 'ls prosjekter/', options: [] });
+  expect(complete('~', commands, 'cat prosjekter/proof/R')).toEqual({
+    completed: 'cat prosjekter/proof/README.md ',
+    options: [],
+  });
+  expect(complete('~/prosjekter', commands, 'cd ../ko')).toEqual({ completed: 'cd ../kontakt/', options: [] });
+  expect(complete('~', commands, './h')).toEqual({ completed: './hei.sh ', options: [] });
+});
+
+test('complete fills in as far as the matches agree, then lists them', () => {
+  expect(complete('~', commands, 'c')).toEqual({ completed: 'c', options: ['cat', 'cd', 'clear'] });
+  expect(complete('~', commands, 'cl')).toEqual({ completed: 'clear ', options: [] });
+  expect(complete('~/prosjekter', commands, 'ls m')).toEqual({ completed: 'ls myldre/', options: [] });
+  expect(complete('~', commands, 'cat ')).toEqual({
+    completed: 'cat ',
+    options: ['hei.sh', 'kontakt/', 'om-meg.md', 'prosjekter/'],
+  });
+});
+
+test('complete offers only directories and links to cd', () => {
+  expect(complete('~', commands, 'cd ')).toEqual({ completed: 'cd ', options: ['kontakt/', 'prosjekter/'] });
+});
+
+test('complete leaves unknown, quoted, and empty words alone', () => {
+  expect(complete('~', commands, 'xyz')).toEqual({ completed: 'xyz', options: [] });
+  expect(complete('~', commands, 'cat nope/')).toEqual({ completed: 'cat nope/', options: [] });
+  expect(complete('~', commands, `cat "om`)).toEqual({ completed: `cat "om`, options: [] });
+  expect(complete('~', commands, '')).toEqual({ completed: '', options: [] });
+});
 
 test('parse splits a command into words on any run of whitespace', () => {
   expect(parse('  ls   -la\tprosjekter ')).toEqual(['ls', '-la', 'prosjekter']);

@@ -261,6 +261,14 @@ const { path } = Astro.props;
       field.value = commandHistory[historyAt] ?? draft;
       field.setSelectionRange(field.value.length, field.value.length);
       render();
+    } else if (event.key === 'Tab' && !modified && field.value.trim()) {
+      // An empty prompt lets Tab move focus on, so the terminal never traps the keyboard
+      const at = field.selectionStart ?? field.value.length;
+      const { completed, options } = shell.complete(field.value.slice(0, at));
+      if (options.length) printEntry(echo(field.value), line(options.join('  '), 'output pre'));
+      field.value = completed + field.value.slice(field.selectionEnd ?? at);
+      field.setSelectionRange(completed.length, completed.length);
+      render();
     } else if (ctrl && key === 'c' && nothingSelected) {
       printEntry(echo(`${field.value}^C`));
       newLine();

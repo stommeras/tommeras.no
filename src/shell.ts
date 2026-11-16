@@ -13,6 +13,46 @@ export const parse = (input: string, env: Record<string, string> = {}) =>
     return expanded || quoted ? [expanded] : [];
   });
 
+// Completes the last word of what was typed before the cursor, as zsh does on Tab: the first word against the
+// command names, a path anywhere else. A unique match is filled in whole, several are filled in as far as they
+// agree, and when that adds nothing the matches come back as options to print.
+export function complete(cwd: string, commands: string[], before: string) {
+  const word = /\S*$/.exec(before)![0];
+  const start = before.slice(0, before.length - word.length);
+  const none = { completed: before, options: [] as string[] };
+  // Quotes and variables would need parse() to rebuild the word, and no name here needs them
+  if (/["'$]/.test(word)) return none;
+
+  const first = !start.trim();
+  let candidates: { text: string; option: string; end: string }[];
+  if (first && !word.includes('/')) {
+    if (!word) return none;
+    candidates = commands
+      .filter((name) => name.startsWith(word))
+      .map((name) => ({ text: name, option: name, end: ' ' }));
+  } else {
+    const dirPart = word.slice(0, word.lastIndexOf('/') + 1);
+    const prefix = word.slice(dirPart.length);
+    const path = resolve(cwd, dirPart || '.');
+    const dir = path ? items.get(path) : undefined;
+    const onlyDirs = start.trim() === 'cd';
+    candidates = (dir?.children ?? [])
+      .filter((child) => child.name.startsWith(prefix) && (!onlyDirs || child.kind !== 'file'))
+      .map((child) => ({
+        text: dirPart + child.name,
+        option: label(child),
+        end: child.kind === 'dir' ? '/' : ' ',
+      }));
+  }
+
+  if (candidates.length === 1) return { completed: start + candidates[0].text + candidates[0].end, options: [] };
+  if (!candidates.length) return none;
+  let shared = candidates[0].text;
+  for (const { text } of candidates) while (!text.startsWith(shared)) shared = shared.slice(0, -1);
+  if (shared.length > word.length) return { completed: start + shared, options: [] };
+  return { completed: before, options: candidates.map(({ option }) => option) };
+}
+
 export const line = (text: string, className = 'output') => {
   const p = document.createElement('p');
   p.className = className;
@@ -43,7 +83,12 @@ const help = [
   'man <kommando>  vis hjelp for en kommando',
   'clear           tøm skjermen',
   'exit            avslutt',
+  '',
+  'Tab fullfører kommandoer og stier.',
 ];
+
+// Tab completes only the commands help lists, so the easter eggs stay hidden
+const listed = help.map((usage) => usage.split(' ')[0]).filter((name) => /^[a-z]+$/.test(name));
 
 const systems: [string, RegExp][] = [
   ['iOS', /iPhone|iPad|iPod/],
@@ -340,6 +385,7 @@ export const createShell = (terminal: Terminal) => {
 
   return {
     parse: (command: string) => parse(command, env()),
+    complete: (before: string) => complete(cwd, listed, before),
     run: (name: string | undefined, args: string[]) => {
       if (name && name !== 'exit') warnedAboutJobs = false;
       if (!name) return [];
