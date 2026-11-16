@@ -9,7 +9,8 @@ interface Props {
 
 const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tømmerås.' } = Astro.props;
 // Link previews need absolute URLs. Astro.site is the site setting in astro.config.mjs
-const url = new URL(Astro.url.pathname, Astro.site);
+// The build gives /prosjekter/proof/, but the site links to /prosjekter/proof. This drops the trailing slash, except on /
+const url = new URL(Astro.url.pathname.replace(/(?<=.)\/$/, ''), Astro.site);
 const image = new URL('/social-card.png', Astro.site);
 ---
 
