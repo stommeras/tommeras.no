@@ -8,6 +8,10 @@ interface Props {
 }
 
 const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tømmerås.' } = Astro.props;
+// Link previews need absolute URLs. Astro.site is the site setting in astro.config.mjs
+// The build gives /prosjekter/proof/, but the site links to /prosjekter/proof. This drops the trailing slash, except on /
+const url = new URL(Astro.url.pathname.replace(/(?<=.)\/$/, ''), Astro.site);
+const image = new URL('/social-card.png', Astro.site);
 ---
 
 <!doctype html>
@@ -16,6 +20,18 @@ const { title = 'Tømmerås', description = 'Personlig nettside for Steffen Tøm
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    <link rel="canonical" href={url} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Tømmerås" />
+    <meta property="og:locale" content="nb_NO" />
+    <meta property="og:url" content={url} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={image} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Et terminalvindu med navnet Tømmerås i store bokstaver." />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
