@@ -31,6 +31,7 @@ export function complete(cwd: string, commands: string[], before: string) {
       .filter((name) => name.startsWith(word))
       .map((name) => ({ text: name, option: name, end: ' ' }));
   } else {
+    if (word === '~') return { completed: `${start}~/`, options: [] };
     const dirPart = word.slice(0, word.lastIndexOf('/') + 1);
     const prefix = word.slice(dirPart.length);
     const path = resolve(cwd, dirPart || '.');
@@ -83,8 +84,6 @@ const help = [
   'man <kommando>  vis hjelp for en kommando',
   'clear           tøm skjermen',
   'exit            avslutt',
-  '',
-  'Tab fullfører kommandoer og stier.',
 ];
 
 // Tab completes only the commands help lists, so the easter eggs stay hidden
@@ -345,7 +344,8 @@ export const createShell = (terminal: Terminal) => {
   };
 
   const editor = () => [line('Du kommer ikke ut igjen.')];
-  const printHelp = () => [line(help.join('\n'), 'output pre')];
+  // The Tab line sits outside help, so man doesn't take it for a command
+  const printHelp = () => [line(`${help.join('\n')}\n\nTab fullfører kommandoer og stier.`, 'output pre')];
   const dateFormat = new Intl.DateTimeFormat('nb-NO', { dateStyle: 'full', timeStyle: 'long' });
 
   const commands: Record<string, (args: string[]) => Element[]> = {

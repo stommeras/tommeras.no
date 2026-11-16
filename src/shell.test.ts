@@ -13,6 +13,7 @@ test('complete fills in a unique command, path, or directory', () => {
   });
   expect(complete('~/prosjekter', commands, 'cd ../ko')).toEqual({ completed: 'cd ../kontakt/', options: [] });
   expect(complete('~', commands, './h')).toEqual({ completed: './hei.sh ', options: [] });
+  expect(complete('~/kontakt', commands, 'ls ~')).toEqual({ completed: 'ls ~/', options: [] });
 });
 
 test('complete fills in as far as the matches agree, then lists them', () => {

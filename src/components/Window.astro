@@ -263,10 +263,11 @@ const { path } = Astro.props;
       render();
     } else if (event.key === 'Tab' && !modified && field.value.trim()) {
       // An empty prompt lets Tab move focus on, so the terminal never traps the keyboard
-      const at = field.selectionStart ?? field.value.length;
+      // Complete from the end of any selection, so Tab never deletes selected text
+      const at = field.selectionEnd!;
       const { completed, options } = shell.complete(field.value.slice(0, at));
       if (options.length) printEntry(echo(field.value), line(options.join('  '), 'output pre'));
-      field.value = completed + field.value.slice(field.selectionEnd ?? at);
+      field.value = completed + field.value.slice(at);
       field.setSelectionRange(completed.length, completed.length);
       render();
     } else if (ctrl && key === 'c' && nothingSelected) {
