@@ -261,6 +261,16 @@ const { path } = Astro.props;
       field.value = commandHistory[historyAt] ?? draft;
       field.setSelectionRange(field.value.length, field.value.length);
       render();
+    } else if (event.key === 'Tab' && !modified) {
+      const selectionEnd = field.selectionEnd!;
+      const toCursor = field.value.slice(0, selectionEnd);
+      const { completed, options } = shell.complete(toCursor);
+      const nothingToComplete = completed === toCursor && !options.length;
+      if (nothingToComplete) return;
+      if (options.length) printEntry(echo(field.value), line(options.join('  '), 'output pre'));
+      field.value = completed + field.value.slice(selectionEnd);
+      field.setSelectionRange(completed.length, completed.length);
+      render();
     } else if (ctrl && key === 'c' && nothingSelected) {
       printEntry(echo(`${field.value}^C`));
       newLine();
