@@ -13,15 +13,12 @@ export const parse = (input: string, env: Record<string, string> = {}) =>
     return expanded || quoted ? [expanded] : [];
   });
 
-// Completes the last word of what was typed before the cursor, as zsh does on Tab: the first word against the
-// command names, a path anywhere else. A unique match is filled in whole, several are filled in as far as they
-// agree, and when that adds nothing the matches come back as options to print.
 export function complete(cwd: string, commands: string[], before: string) {
   const word = /\S*$/.exec(before)![0];
   const start = before.slice(0, before.length - word.length);
   const none = { completed: before, options: [] as string[] };
-  // Quotes and variables would need parse() to rebuild the word, and no name here needs them
-  if (/["'$]/.test(word)) return none;
+  const needsParse = /["'$]/.test(word);
+  if (needsParse) return none;
 
   const first = !start.trim();
   let candidates: { text: string; option: string; end: string }[];
@@ -86,8 +83,9 @@ const help = [
   'exit            avslutt',
 ];
 
-// Tab completes only the commands help lists, so the easter eggs stay hidden
-const listed = help.map((usage) => usage.split(' ')[0]).filter((name) => /^[a-z]+$/.test(name));
+const tabHint = 'Tab fullfører kommandoer og stier.';
+
+const helpCommands = help.map((usage) => usage.split(' ')[0]).filter((name) => /^[a-z]+$/.test(name));
 
 const systems: [string, RegExp][] = [
   ['iOS', /iPhone|iPad|iPod/],
@@ -344,8 +342,7 @@ export const createShell = (terminal: Terminal) => {
   };
 
   const editor = () => [line('Du kommer ikke ut igjen.')];
-  // The Tab line sits outside help, so man doesn't take it for a command
-  const printHelp = () => [line(`${help.join('\n')}\n\nTab fullfører kommandoer og stier.`, 'output pre')];
+  const printHelp = () => [line(`${help.join('\n')}\n\n${tabHint}`, 'output pre')];
   const dateFormat = new Intl.DateTimeFormat('nb-NO', { dateStyle: 'full', timeStyle: 'long' });
 
   const commands: Record<string, (args: string[]) => Element[]> = {
@@ -385,7 +382,7 @@ export const createShell = (terminal: Terminal) => {
 
   return {
     parse: (command: string) => parse(command, env()),
-    complete: (before: string) => complete(cwd, listed, before),
+    complete: (before: string) => complete(cwd, helpCommands, before),
     run: (name: string | undefined, args: string[]) => {
       if (name && name !== 'exit') warnedAboutJobs = false;
       if (!name) return [];
