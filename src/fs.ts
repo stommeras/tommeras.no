@@ -141,6 +141,19 @@ export const home: Item = {
             ),
           ],
         },
+        {
+          name: 'varde',
+          kind: 'dir',
+          icon: 'folder',
+          href: '/prosjekter/varde',
+          desc: 'rolig utforskingsspill i Godot (under arbeid)',
+          children: [
+            readme(
+              'Varde',
+              'Et rolig utforskingsspill i Godot. Hver runde lager en ny øy fra et frø. Du går i land med et blankt kart og følger gamle varder opp til den ekte toppen, mens kartet fyller seg ut. Det fins ingen kamp og ingen måte å tape på.',
+            ),
+          ],
+        },
       ],
     },
   ],

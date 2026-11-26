@@ -10,6 +10,7 @@ const figment = byPath(`${path}/figment/README.md`).text!;
 const myldre = byPath(`${path}/myldre/README.md`).text!;
 const proof = byPath(`${path}/proof/README.md`).text!;
 const rabra = byPath(`${path}/rabra/README.md`).text!;
+const varde = byPath(`${path}/varde/README.md`).text!;
 ---
 
 <Layout title="Prosjekter | Tømmerås" description="Prosjektene til Steffen Tømmerås, med skjermbilder.">
@@ -132,6 +133,27 @@ const rabra = byPath(`${path}/rabra/README.md`).text!;
       </Shots>
       <div class="more">
         <Prompt path={path} command="cd rabra" href="/prosjekter/rabra" comment="les mer" />
+      </div>
+    </section>
+
+    <section>
+      <Prompt path={path} command="head varde/README.md" />
+      <h2 class="title">
+        <span aria-hidden="true"># </span>
+        {varde.title}
+      </h2>
+      <p>{varde.body}</p>
+      <Shots label="Skjermbilde fra Varde">
+        <img
+          src="/prosjekter/varde-tittel.jpg"
+          width="960"
+          height="540"
+          loading="lazy"
+          alt="Tittelskjermen i Varde: snødekte fjell i pikselgrafikk reiser seg fra en grønn øy i et mørkeblått hav, med knappen Ny øy midt på."
+        />
+      </Shots>
+      <div class="more">
+        <Prompt path={path} command="cd varde" href="/prosjekter/varde" comment="les mer" />
       </div>
     </section>
 
