@@ -1,0 +1,217 @@
+---
+import Prompt from '../../components/Prompt.astro';
+import Shots from '../../components/Shots.astro';
+import Window from '../../components/Window.astro';
+import { byPath } from '../../fs';
+import Layout from '../../layouts/Layout.astro';
+
+const path = '~/prosjekter/varde';
+const readme = byPath(`${path}/README.md`).text!;
+
+// The milestones in SPEC.md in stommeras/varde, one GitHub milestone each
+const milestones = [
+  {
+    title: 'Generator og debugvisning',
+    body: 'Lager en øy fra en seed og viser høyde, fuktighet og materiale som bilder.',
+    status: 'ferdig',
+  },
+  {
+    title: 'Utseendet',
+    body: 'Terreng i 3D med materialer, sol og skygger, hav og elver, tegnet som pikselgrafikk.',
+    status: 'ferdig',
+  },
+  {
+    title: 'Gå på øya',
+    body: 'Tittelskjermen, figuren, kameraet, hvor du kan gå, og terrenget som blekner foran figuren.',
+    status: 'ferdig',
+  },
+  {
+    title: 'Utforske',
+    body: 'Synsvidde, tåke som letter der du har sett, topper du kartlegger, og et kart med høydekurver.',
+    status: 'pågår',
+  },
+  {
+    title: 'Toppen',
+    body: 'De gamle vardene med lapper som viser veien, skyer rundt toppene, den ekte toppen og en sluttskjerm.',
+    status: 'kommer',
+  },
+  {
+    title: 'Finpuss',
+    body: 'Genererte trær, et døgn med skygger som flytter seg, partikler og lyd.',
+    status: 'kommer',
+  },
+] as const;
+
+const marks = { ferdig: '[x]', pågår: '[~]', kommer: '[ ]' };
+---
+
+<Layout
+  title="Varde | Tømmerås"
+  description="Varde er et rolig utforskingsspill i Godot der du følger gamle varder opp til den ekte toppen på en generert øy."
+>
+  <Window path={path}>
+    <Prompt command="cd prosjekter/varde" />
+    <Prompt path={path} command="cat README.md" />
+    <h1 class="title">
+      <span aria-hidden="true"># </span>
+      {readme.title}
+    </h1>
+    <p>{readme.body}</p>
+    <Shots label="Skjermbilde fra Varde">
+      <img
+        src="/prosjekter/varde-tittel.jpg"
+        width="960"
+        height="540"
+        loading="lazy"
+        alt="Tittelskjermen i Varde: snødekte fjell i pikselgrafikk reiser seg fra en grønn øy i et mørkeblått hav, med knappen Ny øy midt på."
+      />
+    </Shots>
+    <p>
+      <a href="https://varde.tommeras.no">Spill i nettleseren</a>{' '}
+      <span class="target" aria-hidden="true">-> varde.tommeras.no</span>
+    </p>
+    <p>
+      Spillet styres med tastaturet, så det fungerer best på desktop. Første gang laster nettleseren ned hele spillet, så
+      det tar litt tid.
+    </p>
+
+    <section>
+      <h2>
+        <span aria-hidden="true">## </span>Status
+      </h2>
+      <p>
+        Under arbeid. Øya, utseendet og det å gå rundt er ferdig. Nå kommer utforskingen på plass, og vardene og den
+        ekte toppen er neste steg.
+      </p>
+      <ol class="milestones">
+        {
+          milestones.map((milestone) => (
+            <li class={milestone.status}>
+              <span class="mark" aria-hidden="true">
+                {marks[milestone.status]}
+              </span>
+              <div>
+                <h3>
+                  {milestone.title} <span class="status">{milestone.status}</span>
+                </h3>
+                <p>{milestone.body}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section>
+      <h2>
+        <span aria-hidden="true">## </span>Teknologi
+      </h2>
+      <p>Godot 4 · GDScript · WebAssembly</p>
+    </section>
+
+    <section>
+      <h2>
+        <span aria-hidden="true">## </span>Valg underveis
+      </h2>
+
+      <h3>
+        <span aria-hidden="true">### </span>Ingenting er tegnet for hånd
+      </h3>
+      <p>
+        Verden er 3D, men rendres i 960 × 540 og skaleres opp med hele piksler. Da blir alt pikselgrafikk, og terrenget,
+        figuren og detaljene på bakken lages av generatoren og shaderne.
+      </p>
+
+      <h3>
+        <span aria-hidden="true">### </span>Høyden bestemmer hva du ser
+      </h3>
+      <p>
+        Synsvidden er 40 ruter ved havet og vokser til rundt 120 på toppene, og høyere terreng skygger for utsikten. Hvilken
+        topp du går opp på, er det viktigste valget i spillet.
+      </p>
+
+      <h3>
+        <span aria-hidden="true">### </span>Klipper er ruter
+      </h3>
+      <p>
+        Er det brattere enn 60° til naboruta, blir begge rutene klippe, og figuren kan ikke gå der. Terrengshaderen tegner
+        det samme rutenettet, så du ser nøyaktig hvor du ikke kommer opp.
+      </p>
+    </section>
+
+    <div class="back">
+      <Prompt path={path} command="cd .." href="/prosjekter" comment="alle prosjekter" />
+      <Prompt path={path} command="cd ~" href="/" comment="forsiden" />
+    </div>
+  </Window>
+</Layout>
+
+<style>
+  h3 {
+    margin: 32px 0 0;
+    font-size: 1.0625rem;
+  }
+
+  p {
+    max-width: 64ch;
+    margin: 12px 0 0;
+  }
+
+  .target {
+    color: var(--muted);
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
+
+  .milestones {
+    display: grid;
+    gap: 20px;
+    margin: 28px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .milestones li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+  }
+
+  .milestones h3 {
+    margin: 0;
+  }
+
+  .milestones p {
+    margin-top: 4px;
+  }
+
+  .mark {
+    font-weight: 700;
+    white-space: pre;
+  }
+
+  .status {
+    margin-left: 6px;
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 400;
+  }
+
+  .ferdig .mark {
+    color: var(--mint);
+  }
+
+  .pågår .mark,
+  .pågår .status {
+    color: var(--peach);
+  }
+
+  .kommer .mark,
+  .kommer p {
+    color: var(--muted);
+  }
+
+  .back {
+    margin-top: 56px;
+  }
+</style>
