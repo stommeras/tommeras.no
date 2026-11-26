@@ -33,7 +33,7 @@ const milestones = [
   {
     title: 'Toppen',
     body: 'De gamle vardene med lapper som viser veien, skyer rundt toppene, den ekte toppen og en sluttskjerm.',
-    status: 'kommer',
+    status: 'pågår',
   },
   {
     title: 'Finpuss',
@@ -68,11 +68,13 @@ const marks = { ferdig: '[x]', pågår: '[~]', kommer: '[ ]' };
     </Shots>
     <p>
       <a href="https://varde.tommeras.no">Spill i nettleseren</a>{' '}
-      <span class="target" aria-hidden="true">-> varde.tommeras.no</span>
+      <span class="target" aria-hidden="true">
+        -> varde.tommeras.no
+      </span>
     </p>
     <p>
-      Spillet styres med tastaturet, så det fungerer best på desktop. Første gang laster nettleseren ned hele spillet, så
-      det tar litt tid.
+      Spillet styres med tastaturet, så det fungerer best på desktop. Første gang laster nettleseren ned hele spillet,
+      så det tar litt tid.
     </p>
 
     <section>
@@ -80,25 +82,23 @@ const marks = { ferdig: '[x]', pågår: '[~]', kommer: '[ ]' };
         <span aria-hidden="true">## </span>Status
       </h2>
       <p>
-        Under arbeid. Øya, utseendet, det å gå rundt og utforskingen er ferdig. Neste steg er de gamle vardene og den
-        ekte toppen.
+        Under arbeid. Øya, utseendet, det å gå rundt og utforskingen er ferdig. Nå er det de gamle vardene og den ekte
+        toppen som står for tur.
       </p>
       <ol class="milestones">
-        {
-          milestones.map((milestone) => (
-            <li class={milestone.status}>
-              <span class="mark" aria-hidden="true">
-                {marks[milestone.status]}
-              </span>
-              <div>
-                <h3>
-                  {milestone.title} <span class="status">{milestone.status}</span>
-                </h3>
-                <p>{milestone.body}</p>
-              </div>
-            </li>
-          ))
-        }
+        {milestones.map((milestone) => (
+          <li class={milestone.status}>
+            <span class="mark" aria-hidden="true">
+              {marks[milestone.status]}
+            </span>
+            <div>
+              <h3>
+                {milestone.title} <span class="status">{milestone.status}</span>
+              </h3>
+              <p>{milestone.body}</p>
+            </div>
+          </li>
+        ))}
       </ol>
     </section>
 
@@ -126,16 +126,16 @@ const marks = { ferdig: '[x]', pågår: '[~]', kommer: '[ ]' };
         <span aria-hidden="true">### </span>Høyden bestemmer hva du ser
       </h3>
       <p>
-        Synsvidden er 40 ruter ved havet og vokser til rundt 120 på toppene, og høyere terreng skygger for utsikten. Hvilken
-        topp du går opp på, er det viktigste valget i spillet.
+        Synsvidden er 40 ruter ved havet og vokser til rundt 120 på toppene, og høyere terreng skygger for utsikten.
+        Hvilken topp du går opp på, er det viktigste valget i spillet.
       </p>
 
       <h3>
         <span aria-hidden="true">### </span>Klipper er ruter
       </h3>
       <p>
-        Er det brattere enn 60° til naboruta, blir begge rutene klippe, og figuren kan ikke gå der. Terrengshaderen tegner
-        det samme rutenettet, så du ser nøyaktig hvor du ikke kommer opp.
+        Er det brattere enn 60° til naboruta, blir begge rutene klippe, og figuren kan ikke gå der. Terrengshaderen
+        tegner det samme rutenettet, så du ser nøyaktig hvor du ikke kommer opp.
       </p>
     </section>
 
