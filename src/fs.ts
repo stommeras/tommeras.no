@@ -150,7 +150,7 @@ export const home: Item = {
           children: [
             readme(
               'Varde',
-              'Et rolig utforskingsspill i Godot. Hver runde lager en ny øy fra en seed. Du går i land med et blankt kart og følger gamle varder opp til den ekte toppen, mens kartet fyller seg ut. Det fins ingen kamp og ingen måte å tape på.',
+              'Et rolig utforskingsspill i Godot. Hver runde lager en ny øy fra et frø. Du går i land med et blankt kart og følger gamle varder opp til den ekte toppen, mens kartet fyller seg ut. Det fins ingen kamp og ingen måte å tape på.',
             ),
           ],
         },
