@@ -1,5 +1,7 @@
 import moriaDoor from './moria-door.txt?raw';
 import { absolute, homeDir, host, items, label, resolve, rowKey, user, type Item, type Text } from './fs';
+import { rememberSnow, showSnow } from './snow';
+import { countdown, isWinter, winterHost } from './winter';
 
 const words = /(?:[^\s"']+|"[^"]*"?|'[^']*'?)+/g;
 const parts = /[^"']+|"([^"]*)"?|'([^']*)'?/g;
@@ -74,7 +76,7 @@ export interface Terminal {
   shakeHard: () => void;
 }
 
-const help = [
+const baseHelp = [
   './hei.sh        si hei',
   'ls [-la] [sti]  vis hva som ligger i en mappe',
   'cat <fil>       skriv ut en fil',
@@ -88,9 +90,12 @@ const help = [
   'exit            avslutt',
 ];
 
-const tabHint = 'Tab fullfører kommandoer og stier.';
+const winterHelp = [
+  'juletre         tegn et juletre',
+  'snø [på|av]     la det snø, eller slå snøen bak vinduet av og på',
+];
 
-const helpCommands = help.map((usage) => usage.split(' ')[0]).filter((name) => /^[a-z]+$/.test(name));
+const tabHint = 'Tab fullfører kommandoer og stier.';
 
 const systems: [string, RegExp][] = [
   ['iOS', /iPhone|iPad|iPod/],
@@ -131,6 +136,9 @@ const train = String.raw`
 
 export const createShell = (terminal: Terminal) => {
   let cwd = terminal.cwd;
+  const winter = isWinter(new Date());
+  const help = winter ? [...baseHelp, ...winterHelp] : baseHelp;
+  const helpCommands = help.map((usage) => usage.split(' ')[0]).filter((name) => /^\p{Ll}+$/u.test(name));
 
   const env = () => ({ USER: user, HOME: homeDir, PWD: absolute(cwd), SHELL: '/bin/zsh' });
 
@@ -380,10 +388,11 @@ export const createShell = (terminal: Terminal) => {
     const info = line('', 'output pre');
     const heading = document.createElement('span');
     heading.className = 'fetch-host';
-    heading.textContent = host;
+    const shownHost = winter ? winterHost : host;
+    heading.textContent = shownHost;
     const dashes = document.createElement('span');
     dashes.setAttribute('aria-hidden', 'true');
-    dashes.textContent = `\n${'-'.repeat(host.length)}`;
+    dashes.textContent = `\n${'-'.repeat(shownHost.length)}`;
     info.append(heading, dashes);
     for (const [key, value] of rows) {
       const name = document.createElement('span');
@@ -418,6 +427,63 @@ export const createShell = (terminal: Terminal) => {
     picture.addEventListener('animationend', () => picture.remove());
     box.append(line('Et tog kjører forbi.', 'visually-hidden'), picture);
     return [box];
+  };
+
+  const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const juletre = () => {
+    const height = 7;
+    const ornaments = ['pink', 'lavender', 'peach'];
+    const paint = (text: string, token: string) => {
+      const span = document.createElement('span');
+      span.textContent = text;
+      span.style.color = `var(--${token})`;
+      return span;
+    };
+    const picture = document.createElement('pre');
+    picture.className = 'tree';
+    picture.setAttribute('aria-hidden', 'true');
+    picture.append(' '.repeat(height), paint('★', 'peach'));
+    for (let row = 0; row < height; row++) {
+      picture.append(`\n${' '.repeat(height - row - 1)}/`);
+      for (let i = 0; i < 2 * row + 1; i++)
+        picture.append(
+          Math.random() < 0.25 ? paint('o', ornaments[Math.floor(Math.random() * ornaments.length)]) : '*',
+        );
+      picture.append('\\');
+    }
+    picture.append(`\n${' '.repeat(height - 1)}`, paint('[_]', 'peach'));
+    return [line('Et juletre med pynt.', 'visually-hidden'), picture];
+  };
+
+  // Snow falls through a box of text for a few seconds, then settles
+  const snowfall = () => {
+    const [rows, columns] = [8, 40];
+    const flakes = () => Array.from({ length: columns }, () => (Math.random() < 0.08 ? '*' : ' ')).join('');
+    const frame = Array.from({ length: rows }, flakes);
+    const picture = document.createElement('pre');
+    picture.className = 'snowfall';
+    picture.setAttribute('aria-hidden', 'true');
+    picture.textContent = frame.join('\n');
+    if (!reducedMotion()) {
+      const timer = setInterval(() => {
+        frame.pop();
+        frame.unshift(flakes());
+        picture.textContent = frame.join('\n');
+      }, 200);
+      setTimeout(() => clearInterval(timer), 4000);
+    }
+    return [line('Snø faller.', 'visually-hidden'), picture];
+  };
+
+  const snø = ([arg]: string[]) => {
+    if (!arg) return snowfall();
+    if (arg !== 'på' && arg !== 'av') return [line(`snø: ukjent valg '${arg}'`)];
+    const on = arg === 'på';
+    rememberSnow(on);
+    showSnow(on);
+    if (!on) return [line('Snøen har stoppet.')];
+    return [line(reducedMotion() ? 'Snøen står stille når du har bedt om mindre bevegelse.' : 'Det begynner å snø.')];
   };
 
   let warnedAboutJobs = false;
@@ -465,7 +531,11 @@ export const createShell = (terminal: Terminal) => {
     man,
     exit,
     whoami: () => [line(user)],
-    date: () => [line(dateFormat.format(new Date()))],
+    date: () => {
+      const now = new Date();
+      const christmas = countdown(now);
+      return [line(dateFormat.format(now)), ...(christmas ? [line(christmas)] : [])];
+    },
     echo: (args) => [line(args.join(' '), 'output pre')],
     sudo,
     rm,
@@ -478,6 +548,8 @@ export const createShell = (terminal: Terminal) => {
     nvim: editor,
     nano: editor,
     mellon,
+    juletre,
+    snø,
   };
 
   return {

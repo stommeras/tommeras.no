@@ -19,12 +19,16 @@ const { path } = Astro.props;
       <i></i>
     </span>
     <span class="bar-title">
-      {host}: <span class="bar-path">{path}</span>
+      <span class="bar-host">{host}</span>: <span class="bar-path">{path}</span>
     </span>
     <span class="bar-right">zsh</span>
   </div>
   <!-- Puts the previous page's path in the title bar before first paint, so the script below can type the change -->
   <script is:inline>
+    // The same dates as isWinter in src/winter.ts. The host changes before first paint, so it doesn't flicker.
+    const now = new Date();
+    if (now.getMonth() === 11 || (now.getMonth() === 0 && now.getDate() <= 6))
+      document.querySelector('.bar-host').textContent = 'gjest@nordpolen';
     try {
       const bar = document.querySelector('.bar-path');
       const from = sessionStorage.getItem('bar-path');
@@ -619,12 +623,22 @@ const { path } = Astro.props;
   }
 
   .prompt-end :global(.sl pre),
-  .prompt-end :global(.door) {
+  .prompt-end :global(.door),
+  .prompt-end :global(.tree),
+  .prompt-end :global(.snowfall) {
     width: max-content;
     margin: 0;
     font: inherit;
     font-size: 0.8125rem;
     line-height: 1.2;
+  }
+
+  .prompt-end :global(.tree) {
+    color: var(--mint);
+  }
+
+  .prompt-end :global(.snowfall) {
+    color: var(--muted);
   }
 
   /* The door is 49 columns, about 30em of monospace, so it shrinks to fit a phone instead of scrolling the page */

@@ -46,6 +46,10 @@ const image = new URL('/social-card.png', Astro.site);
 </html>
 
 <script>
+  import { showSnow, snowWanted } from '../snow';
+
+  showSnow(snowWanted());
+
   console.log(`
 ╔══════════════════════════════════════════════╗
 ║                                              ║
@@ -144,6 +148,32 @@ const image = new URL('/social-card.png', Astro.site);
     white-space: nowrap;
   }
 
+  /* Behind the window, above the dots. On a phone the window covers the whole width, so the snow only shows on wider screens. */
+  .snow {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: clip;
+    pointer-events: none;
+    color: var(--muted);
+    opacity: 0.7;
+  }
+
+  .snow span {
+    position: absolute;
+    top: -2rem;
+    animation: snow linear infinite;
+  }
+
+  @keyframes snow {
+    50% {
+      translate: var(--drift) 55vh;
+    }
+    to {
+      translate: 0 calc(100vh + 2rem);
+    }
+  }
+
   @media (max-width: 600px) {
     body {
       background-image: none;
@@ -159,6 +189,10 @@ const image = new URL('/social-card.png', Astro.site);
   @media (prefers-reduced-motion: reduce) {
     :root {
       transition: none;
+    }
+
+    .snow {
+      display: none;
     }
   }
 </style>
