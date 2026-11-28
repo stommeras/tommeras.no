@@ -30,6 +30,16 @@ test('complete offers only directories and links to cd', () => {
   expect(complete('~', commands, 'cd ')).toEqual({ completed: 'cd ', options: ['kontakt/', 'moria/', 'prosjekter/'] });
 });
 
+test('complete leaves out hidden paths', () => {
+  expect(complete('~', commands, 'cat moria/')).toEqual({
+    completed: 'cat moria/',
+    options: ['broen/', 'brønnen/', 'notat.txt', 'stein'],
+  });
+  const sealed = (path: string) => path.startsWith('~/moria/');
+  expect(complete('~', commands, 'cat moria/', sealed)).toEqual({ completed: 'cat moria/', options: [] });
+  expect(complete('~', commands, 'cd mo', sealed)).toEqual({ completed: 'cd moria/', options: [] });
+});
+
 test('complete leaves unknown, quoted, and empty words alone', () => {
   expect(complete('~', commands, 'xyz')).toEqual({ completed: 'xyz', options: [] });
   expect(complete('~', commands, 'cat nope/')).toEqual({ completed: 'cat nope/', options: [] });

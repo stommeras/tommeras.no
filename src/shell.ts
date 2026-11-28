@@ -14,7 +14,8 @@ export const parse = (input: string, env: Record<string, string> = {}) =>
     return expanded || quoted ? [expanded] : [];
   });
 
-export function complete(cwd: string, commands: string[], before: string) {
+// hidden leaves out paths the visitor can't see yet, like the inside of a locked directory
+export function complete(cwd: string, commands: string[], before: string, hidden = (_path: string) => false) {
   const word = /\S*$/.exec(before)![0];
   const start = before.slice(0, before.length - word.length);
   const none = { completed: before, options: [] as string[] };
@@ -36,7 +37,10 @@ export function complete(cwd: string, commands: string[], before: string) {
     const dir = path ? items.get(path) : undefined;
     const onlyDirs = start.trim() === 'cd';
     candidates = (dir?.children ?? [])
-      .filter((child) => child.name.startsWith(prefix) && (!onlyDirs || child.kind !== 'file'))
+      .filter(
+        (child) =>
+          child.name.startsWith(prefix) && (!onlyDirs || child.kind !== 'file') && !hidden(`${path}/${child.name}`),
+      )
       .map((child) => ({
         text: dirPart + child.name,
         option: label(child),
@@ -150,19 +154,26 @@ export const createShell = (terminal: Terminal) => {
     return p;
   };
 
-  const find = (arg: string) => {
-    const path = resolve(cwd, arg);
-    const item = path && items.get(path);
-    return item ? { path: path!, item } : undefined;
-  };
-
-  const missing = 'Ingen slik fil eller filkatalog';
-
   // ~/moria stays shut until the visitor says the password, "mellon"
   const door = '~/moria';
   let doorOpen = false;
   const sealed = (path: string) => !doorOpen && (path === door || path.startsWith(`${door}/`));
   const denied = 'Tilgang nektet';
+
+  // Inside, the visitor can throw the stone down the well with mv, and then it's gone
+  const stone = `${door}/stein`;
+  const well = `${door}/brønnen`;
+  const bridge = `${door}/broen`;
+  let stoneThrown = false;
+  const hidden = (path: string) => (stoneThrown && path === stone) || (sealed(path) && path !== door);
+
+  const find = (arg: string) => {
+    const path = resolve(cwd, arg);
+    const item = path && !(stoneThrown && path === stone) && items.get(path);
+    return item ? { path: path!, item } : undefined;
+  };
+
+  const missing = 'Ingen slik fil eller filkatalog';
 
   const mellon = () => {
     if (doorOpen) return [line('Døren står allerede åpen.')];
@@ -188,7 +199,9 @@ export const createShell = (terminal: Terminal) => {
         item.kind === 'dir'
           ? [
               ...(flags.includes('a') ? [{ path: rowKey(path, true), item, self: true }] : []),
-              ...item.children!.map((child) => ({ path: `${path}/${child.name}`, item: child, self: false })),
+              ...item
+                .children!.map((child) => ({ path: `${path}/${child.name}`, item: child, self: false }))
+                .filter((entry) => !hidden(entry.path)),
             ]
           : [{ path, item, self: false }];
       const output = flags.includes('l') ? list(entries.map((entry) => entry.path)) : names(entries);
@@ -227,6 +240,10 @@ export const createShell = (terminal: Terminal) => {
         picture,
         line('Tal, venn, og tred inn.', 'text'),
       ];
+    }
+    if (path === bridge) {
+      terminal.shakeHard();
+      return [line('Du skal ikke passere!')];
     }
     if (item.href && item.href !== terminal.pagePath) {
       location.assign(item.href);
@@ -293,6 +310,27 @@ export const createShell = (terminal: Terminal) => {
     if (!paths.length) return [line('rm: mangler operand')];
     if (recursive && force) terminal.shakeHard();
     return paths.map((path) => line(`rm: kan ikke fjerne '${path}': Skrivebeskyttet filsystem`));
+  };
+
+  const throwStone = () => {
+    stoneThrown = true;
+    const drums = line('');
+    setTimeout(() => (drums.textContent = 'Langt nede fra dypet: dum … dum … dum.'), 3000);
+    return [line('Plopp.'), drums];
+  };
+
+  const mv = (args: string[]) => {
+    const paths = args.filter((arg) => !arg.startsWith('-'));
+    if (!paths.length) return [line('mv: mangler filoperand')];
+    if (paths.length === 1) return [line(`mv: mangler målfil etter '${paths[0]}'`)];
+    const target = find(paths.pop()!)?.path;
+    return paths.flatMap((arg) => {
+      const found = find(arg);
+      if (!found) return [line(`mv: kan ikke ta status for '${arg}': ${missing}`)];
+      if (sealed(found.path)) return [line(`mv: kan ikke flytte '${arg}': ${denied}`)];
+      if (found.path === stone && target === well) return throwStone();
+      return [line(`mv: kan ikke flytte '${arg}': Skrivebeskyttet filsystem`)];
+    });
   };
 
   const fastfetch = () => {
@@ -400,6 +438,7 @@ export const createShell = (terminal: Terminal) => {
     echo: (args) => [line(args.join(' '), 'output pre')],
     sudo,
     rm,
+    mv,
     fastfetch,
     neofetch: fastfetch,
     sl,
@@ -411,7 +450,7 @@ export const createShell = (terminal: Terminal) => {
 
   return {
     parse: (command: string) => parse(command, env()),
-    complete: (before: string) => complete(cwd, helpCommands, before),
+    complete: (before: string) => complete(cwd, helpCommands, before, hidden),
     run: (name: string | undefined, args: string[]) => {
       if (name && name !== 'exit') warnedAboutJobs = false;
       if (!name) return [];

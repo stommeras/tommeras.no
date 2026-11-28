@@ -72,7 +72,12 @@ export const home: Item = {
       kind: 'dir',
       icon: 'folder',
       locked: true,
-      children: [{ name: 'notat.txt', kind: 'file', icon: 'file', text: { body: 'Ikke kast steiner i brønnen.' } }],
+      children: [
+        { name: 'broen', kind: 'dir', icon: 'folder', children: [] },
+        { name: 'brønnen', kind: 'dir', icon: 'folder', children: [] },
+        { name: 'notat.txt', kind: 'file', icon: 'file', text: { body: 'Ikke kast steiner i brønnen.' } },
+        { name: 'stein', kind: 'file', icon: 'file', text: { body: 'En løs stein, akkurat passe stor til å kaste.' } },
+      ],
     },
     {
       name: 'om-meg.md',
