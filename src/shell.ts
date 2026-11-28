@@ -134,7 +134,13 @@ export const createShell = (terminal: Terminal) => {
 
   const env = () => ({ USER: user, HOME: homeDir, PWD: absolute(cwd), SHELL: '/bin/zsh' });
 
-  const row = (path: string) => terminal.lsRows.querySelector(`[data-path="${CSS.escape(path)}"]`)!.cloneNode(true);
+  const row = (path: string) => {
+    const copy = terminal.lsRows.querySelector(`[data-path="${CSS.escape(path)}"]`)!.cloneNode(true) as Element;
+    // Entry.astro draws ~/moria as locked, so its rows show the real permissions once the door is open
+    if (doorOpen && (path === door || path === rowKey(door, true)))
+      copy.querySelector('.perm')!.textContent = 'drwxr-xr-x';
+    return copy;
+  };
   const list = (paths: string[]) => {
     const ul = document.createElement('ul');
     ul.append(...paths.map(row));
@@ -166,6 +172,11 @@ export const createShell = (terminal: Terminal) => {
   const bridge = `${door}/broen`;
   let stoneThrown = false;
   const hidden = (path: string) => (stoneThrown && path === stone) || (sealed(path) && path !== door);
+  // Checked before find, so a sealed path gives the same answer whether or not it exists
+  const shut = (arg: string) => {
+    const path = resolve(cwd, arg);
+    return !!path && sealed(path);
+  };
 
   const find = (arg: string) => {
     const path = resolve(cwd, arg);
@@ -191,10 +202,17 @@ export const createShell = (terminal: Terminal) => {
     const paths = args.filter((arg) => !options.includes(arg));
     const targets = paths.length ? paths : ['.'];
     return targets.flatMap((arg): Element[] => {
+      if (shut(arg))
+        return [
+          line(
+            resolve(cwd, arg) === door
+              ? `ls: kan ikke åpne filkatalogen '${arg}': ${denied}`
+              : `ls: får ikke tilgang til '${arg}': ${denied}`,
+          ),
+        ];
       const found = find(arg);
       if (!found) return [line(`ls: får ikke tilgang til '${arg}': ${missing}`)];
       const { path, item } = found;
-      if (item.kind === 'dir' && sealed(path)) return [line(`ls: kan ikke åpne filkatalogen '${arg}': ${denied}`)];
       const entries =
         item.kind === 'dir'
           ? [
@@ -211,25 +229,17 @@ export const createShell = (terminal: Terminal) => {
 
   const printFiles = (command: string) => (args: string[]) => {
     return args.flatMap((arg): Element[] => {
+      if (shut(arg)) return [line(`${command}: ${arg}: ${denied}`)];
       const found = find(arg);
       if (!found) return [line(`${command}: ${arg}: ${missing}`)];
       const { path, item } = found;
       if (item.kind === 'dir') return [line(`${command}: ${arg}: Er en filkatalog`)];
-      if (sealed(path)) return [line(`${command}: ${arg}: ${denied}`)];
       return item.text ? text(item.text) : [list([path])];
     });
   };
 
   const cd = ([arg = '~']: string[]) => {
-    const found = find(arg);
-    if (!found) return [line(`cd: ingen slik fil eller filkatalog: ${arg}`)];
-    const { path, item } = found;
-    if (item.kind === 'link') {
-      location.assign(item.href!);
-      return [];
-    }
-    if (item.kind !== 'dir') return [line(`cd: ikke en filkatalog: ${arg}`)];
-    if (sealed(path)) {
+    if (shut(arg)) {
       const picture = document.createElement('pre');
       picture.className = 'door';
       picture.setAttribute('aria-hidden', 'true');
@@ -241,6 +251,14 @@ export const createShell = (terminal: Terminal) => {
         line('Tal, venn, og tred inn.', 'text'),
       ];
     }
+    const found = find(arg);
+    if (!found) return [line(`cd: ingen slik fil eller filkatalog: ${arg}`)];
+    const { path, item } = found;
+    if (item.kind === 'link') {
+      location.assign(item.href!);
+      return [];
+    }
+    if (item.kind !== 'dir') return [line(`cd: ikke en filkatalog: ${arg}`)];
     if (path === bridge) {
       terminal.shakeHard();
       return [line('Du kommer ikke forbi!')];
@@ -268,6 +286,7 @@ export const createShell = (terminal: Terminal) => {
   const runProgram = (path: string) => (Object.hasOwn(programs, path) ? programs[path]() : []);
 
   const exec = (arg: string) => {
+    if (shut(arg)) return [line(`zsh: tilgang nektet: ${arg}`)];
     const found = find(arg);
     if (!found) return [line(`zsh: ingen slik fil eller filkatalog: ${arg}`)];
     const { path, item } = found;
@@ -285,11 +304,11 @@ export const createShell = (terminal: Terminal) => {
   const sh = (command: string) => (args: string[]) => {
     const [arg] = args;
     if (!arg) return [];
+    if (shut(arg)) return [line(`${command}: ${arg}: ${denied}`)];
     const found = find(arg);
     if (!found) return [line(`${command}: ${arg}: ${missing}`)];
     const { path, item } = found;
     if (item.kind === 'dir') return [line(`${command}: ${arg}: Er en filkatalog`)];
-    if (sealed(path)) return [line(`${command}: ${arg}: ${denied}`)];
     if (item.executable) return runProgram(path);
     const first = item.text && firstCommand(item.text);
     return first ? [line(`${arg}: linje ${first.lineNumber}: ${first.word}: kommando ikke funnet`)] : [];
@@ -323,12 +342,14 @@ export const createShell = (terminal: Terminal) => {
     const paths = args.filter((arg) => !arg.startsWith('-'));
     if (!paths.length) return [line('mv: mangler filoperand')];
     if (paths.length === 1) return [line(`mv: mangler målfil etter '${paths[0]}'`)];
-    const target = find(paths.pop()!)?.path;
+    // The target can be the well or a path inside it, like moria/brønnen/stein
+    const target = resolve(cwd, paths.pop()!);
+    const intoWell = target === well || target?.startsWith(`${well}/`);
     return paths.flatMap((arg) => {
+      if (shut(arg)) return [line(`mv: kan ikke flytte '${arg}': ${denied}`)];
       const found = find(arg);
       if (!found) return [line(`mv: kan ikke ta status for '${arg}': ${missing}`)];
-      if (sealed(found.path)) return [line(`mv: kan ikke flytte '${arg}': ${denied}`)];
-      if (found.path === stone && target === well) return throwStone();
+      if (found.path === stone && intoWell) return throwStone();
       return [line(`mv: kan ikke flytte '${arg}': Skrivebeskyttet filsystem`)];
     });
   };
@@ -336,9 +357,9 @@ export const createShell = (terminal: Terminal) => {
   // A hidden way to throw for visitors who don't think of mv
   const kast = ([arg, target = well]: string[]) => {
     if (!arg) return [line('kast: mangler operand')];
+    if (shut(arg)) return [line(`kast: ${arg}: ${denied}`)];
     const found = find(arg);
     if (!found) return [line(`kast: ${arg}: ${missing}`)];
-    if (sealed(found.path)) return [line(`kast: ${arg}: ${denied}`)];
     if (found.path === stone && find(target)?.path === well) return throwStone();
     return [line(`kast: ${arg}: Skrivebeskyttet filsystem`)];
   };

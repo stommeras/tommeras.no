@@ -9,7 +9,10 @@ const path = '~/prosjekter/figment';
 const readme = byPath(`${path}/README.md`).text!;
 ---
 
-<Layout title="Figment | Tømmerås" description="Figment er en oppdiktet 8-bits spillkonsoll, skrevet fra bunnen av i Zig.">
+<Layout
+  title="Figment | Tømmerås"
+  description="Figment er en oppdiktet 8-bits spillkonsoll, skrevet fra bunnen av i Zig."
+>
   <Window path={path}>
     <!-- The cd that the figment/ link on the home page stands for -->
     <Prompt command="cd prosjekter/figment" />
@@ -65,12 +68,15 @@ const readme = byPath(`${path}/README.md`).text!;
         <li>Assembleren har etiketter, konstanter og lokale etiketter.</li>
         <li>Skjermen vises på en nettside og i terminalen.</li>
         <li>Konsollen leser taster, piper, gir tilfeldige tall og kjører 60 bilder i sekundet.</li>
-        <li>Nettsiden er tegnet som en håndholdt konsoll, med en knapp for hvert program. Knappene på konsollen virker med mus og berøring.</li>
+        <li>
+          Nettsiden er tegnet som en håndholdt konsoll, med en knapp for hvert program. Knappene på konsollen virker med
+          mus og berøring.
+        </li>
       </ul>
       <p>
-        Det første spillet som prøves ut er Rogue, en roguelike som så vidt er påbegynt. Tangle er et spill for to på samme
-        tastatur. Hver spiller styrer en strek som aldri stopper, og den som kjører inn i en vegg eller en strek, gir
-        motstanderen et poeng.
+        Det første spillet som prøves ut er Rogue, en roguelike som så vidt er påbegynt. Tangle er et spill for to på
+        samme tastatur. Hver spiller styrer en strek som aldri stopper, og den som kjører inn i en vegg eller en strek,
+        gir motstanderen et poeng.
       </p>
     </section>
 
