@@ -17,7 +17,8 @@ export default defineConfig({
   site: 'https://tommeras.no',
   // The site renders no Markdown or <Code>. Shiki's default would only trigger a CSP warning
   markdown: { syntaxHighlight: false },
-  // Hashes every inline script and style into a CSP <meta>. vercel.json sends the directives a <meta> can't carry
+  // Hashes every inline script and style into a CSP <meta>. vercel.json sends a CSP header too, with the directives a <meta>
+  // can't carry and a fallback for responses without the <meta>. Browsers enforce both, so its 'unsafe-inline' doesn't loosen this policy
   security: {
     csp: {
       directives: ["default-src 'self'"],
