@@ -627,6 +627,11 @@ const { path } = Astro.props;
     line-height: 1.2;
   }
 
+  /* The door is 49 columns, about 30em of monospace, so it shrinks to fit a phone instead of scrolling the page */
+  .prompt-end :global(.door) {
+    font-size: min(0.8125rem, (100vw - 32px) / 30);
+  }
+
   @media (prefers-reduced-motion: no-preference) {
     .prompt-end :global(.sl pre) {
       animation: sl 3s linear forwards;
