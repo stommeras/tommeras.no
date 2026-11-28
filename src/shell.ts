@@ -1,3 +1,4 @@
+import moriaDoor from './moria-door.txt?raw';
 import { absolute, homeDir, host, items, label, resolve, rowKey, user, type Item, type Text } from './fs';
 
 const words = /(?:[^\s"']+|"[^"]*"?|'[^']*'?)+/g;
@@ -215,7 +216,18 @@ export const createShell = (terminal: Terminal) => {
       return [];
     }
     if (item.kind !== 'dir') return [line(`cd: ikke en filkatalog: ${arg}`)];
-    if (sealed(path)) return [line(`cd: tilgang nektet: ${arg}`), line('Tal, venn, og tred inn.', 'text')];
+    if (sealed(path)) {
+      const picture = document.createElement('pre');
+      picture.className = 'door';
+      picture.setAttribute('aria-hidden', 'true');
+      picture.textContent = moriaDoor;
+      return [
+        line(`cd: tilgang nektet: ${arg}`),
+        line('En dør av stein med en innskrift over buen.', 'visually-hidden'),
+        picture,
+        line('Tal, venn, og tred inn.', 'text'),
+      ];
+    }
     if (item.href && item.href !== terminal.pagePath) {
       location.assign(item.href);
       return [];
