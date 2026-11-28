@@ -157,6 +157,18 @@ export const createShell = (terminal: Terminal) => {
 
   const missing = 'Ingen slik fil eller filkatalog';
 
+  // ~/moria stays shut until the visitor says the password, "mellon"
+  const door = '~/moria';
+  let doorOpen = false;
+  const sealed = (path: string) => !doorOpen && (path === door || path.startsWith(`${door}/`));
+  const denied = 'Tilgang nektet';
+
+  const mellon = () => {
+    if (doorOpen) return [line('Døren står allerede åpen.')];
+    doorOpen = true;
+    return [line('Døren glir stille opp.')];
+  };
+
   const ls = (args: string[]) => {
     const options = args.filter((arg) => arg.startsWith('-') && arg !== '-');
     const unknown = options.find((option) => option.startsWith('--') && option !== '--all');
@@ -170,6 +182,7 @@ export const createShell = (terminal: Terminal) => {
       const found = find(arg);
       if (!found) return [line(`ls: får ikke tilgang til '${arg}': ${missing}`)];
       const { path, item } = found;
+      if (item.kind === 'dir' && sealed(path)) return [line(`ls: kan ikke åpne filkatalogen '${arg}': ${denied}`)];
       const entries =
         item.kind === 'dir'
           ? [
@@ -188,6 +201,7 @@ export const createShell = (terminal: Terminal) => {
       if (!found) return [line(`${command}: ${arg}: ${missing}`)];
       const { path, item } = found;
       if (item.kind === 'dir') return [line(`${command}: ${arg}: Er en filkatalog`)];
+      if (sealed(path)) return [line(`${command}: ${arg}: ${denied}`)];
       return item.text ? text(item.text) : [list([path])];
     });
   };
@@ -201,6 +215,7 @@ export const createShell = (terminal: Terminal) => {
       return [];
     }
     if (item.kind !== 'dir') return [line(`cd: ikke en filkatalog: ${arg}`)];
+    if (sealed(path)) return [line(`cd: tilgang nektet: ${arg}`), line('Tal, venn, og tred inn.', 'text')];
     if (item.href && item.href !== terminal.pagePath) {
       location.assign(item.href);
       return [];
@@ -245,6 +260,7 @@ export const createShell = (terminal: Terminal) => {
     if (!found) return [line(`${command}: ${arg}: ${missing}`)];
     const { path, item } = found;
     if (item.kind === 'dir') return [line(`${command}: ${arg}: Er en filkatalog`)];
+    if (sealed(path)) return [line(`${command}: ${arg}: ${denied}`)];
     if (item.executable) return runProgram(path);
     const first = item.text && firstCommand(item.text);
     return first ? [line(`${arg}: linje ${first.lineNumber}: ${first.word}: kommando ikke funnet`)] : [];
@@ -378,6 +394,7 @@ export const createShell = (terminal: Terminal) => {
     vim: editor,
     nvim: editor,
     nano: editor,
+    mellon,
   };
 
   return {

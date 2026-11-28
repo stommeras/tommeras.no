@@ -22,12 +22,12 @@ test('complete fills in as far as the matches agree, then lists them', () => {
   expect(complete('~/prosjekter', commands, 'ls m')).toEqual({ completed: 'ls myldre/', options: [] });
   expect(complete('~', commands, 'cat ')).toEqual({
     completed: 'cat ',
-    options: ['hei.sh', 'kontakt/', 'om-meg.md', 'prosjekter/'],
+    options: ['hei.sh', 'kontakt/', 'moria/', 'om-meg.md', 'prosjekter/'],
   });
 });
 
 test('complete offers only directories and links to cd', () => {
-  expect(complete('~', commands, 'cd ')).toEqual({ completed: 'cd ', options: ['kontakt/', 'prosjekter/'] });
+  expect(complete('~', commands, 'cd ')).toEqual({ completed: 'cd ', options: ['kontakt/', 'moria/', 'prosjekter/'] });
 });
 
 test('complete leaves unknown, quoted, and empty words alone', () => {

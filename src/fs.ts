@@ -20,6 +20,8 @@ export interface Item {
   desc?: string;
   text?: Text;
   executable?: boolean;
+  // Shown as d--------- in ls -l. The shell keeps it shut until the visitor says the password.
+  locked?: boolean;
   children?: Item[];
 }
 
@@ -64,6 +66,13 @@ export const home: Item = {
           target: 'linkedin.com/in/steffen-tommeras',
         },
       ],
+    },
+    {
+      name: 'moria',
+      kind: 'dir',
+      icon: 'folder',
+      locked: true,
+      children: [{ name: 'notat.txt', kind: 'file', icon: 'file', text: { body: 'Ikke kast steiner i brønnen.' } }],
     },
     {
       name: 'om-meg.md',
@@ -179,13 +188,15 @@ export const absolute = (path: string) => `${homeDir}${path.slice(1)}`;
 export const rowKey = (path: string, self = false) => (self ? `${path}/.` : path);
 
 export const perm = (item: Item) =>
-  item.kind === 'dir'
-    ? 'drwxr-xr-x'
-    : item.kind === 'link'
-      ? 'lrwxr-xr-x'
-      : item.executable
-        ? '-rwxr-xr-x'
-        : '-rw-r--r--';
+  item.locked
+    ? 'd---------'
+    : item.kind === 'dir'
+      ? 'drwxr-xr-x'
+      : item.kind === 'link'
+        ? 'lrwxr-xr-x'
+        : item.executable
+          ? '-rwxr-xr-x'
+          : '-rw-r--r--';
 
 export const label = (item: Item, self = false) => (self ? './' : item.kind === 'dir' ? `${item.name}/` : item.name);
 
