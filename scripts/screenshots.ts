@@ -64,8 +64,7 @@ for (const shot of shots) {
   const page = await context.newPage();
   await page.goto(shot.demo.url + shot.path, { waitUntil: 'networkidle' });
   // The demo banner above Proof's header and the language and theme switchers in it aren't in the images
-  if (shot.demo === proof)
-    await page.addStyleTag({ content: 'p:has(+ header), header fieldset { display: none }' });
+  if (shot.demo === proof) await page.addStyleTag({ content: 'p:has(+ header), header fieldset { display: none }' });
   await shot.setup?.(page);
   // Waits out transitions so a shot doesn't catch one halfway, like the tree's version boxes fading. Endless
   // and paused animations are skipped because they never finish.
