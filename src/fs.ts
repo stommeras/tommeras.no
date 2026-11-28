@@ -75,7 +75,12 @@ export const home: Item = {
       children: [
         { name: 'broen', kind: 'dir', icon: 'folder', children: [] },
         { name: 'brønnen', kind: 'dir', icon: 'folder', children: [] },
-        { name: 'notat.txt', kind: 'file', icon: 'file', text: { body: 'Ikke kast steiner i brønnen.' } },
+        {
+          name: 'notat.txt',
+          kind: 'file',
+          icon: 'file',
+          text: { body: 'Ikke kast steiner i brønnen. Ikke flytt dem dit heller.' },
+        },
         { name: 'stein', kind: 'file', icon: 'file', text: { body: 'En løs stein, akkurat passe stor til å kaste.' } },
       ],
     },

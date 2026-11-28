@@ -333,6 +333,16 @@ export const createShell = (terminal: Terminal) => {
     });
   };
 
+  // A hidden way to throw for visitors who don't think of mv
+  const kast = ([arg, target = well]: string[]) => {
+    if (!arg) return [line('kast: mangler operand')];
+    const found = find(arg);
+    if (!found) return [line(`kast: ${arg}: ${missing}`)];
+    if (sealed(found.path)) return [line(`kast: ${arg}: ${denied}`)];
+    if (found.path === stone && find(target)?.path === well) return throwStone();
+    return [line(`kast: ${arg}: Skrivebeskyttet filsystem`)];
+  };
+
   const fastfetch = () => {
     const ua = navigator.userAgent;
     const rows = [
@@ -439,6 +449,7 @@ export const createShell = (terminal: Terminal) => {
     sudo,
     rm,
     mv,
+    kast,
     fastfetch,
     neofetch: fastfetch,
     sl,
