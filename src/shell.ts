@@ -243,7 +243,7 @@ export const createShell = (terminal: Terminal) => {
     }
     if (path === bridge) {
       terminal.shakeHard();
-      return [line('Du skal ikke passere!')];
+      return [line('Du kommer ikke forbi!')];
     }
     if (item.href && item.href !== terminal.pagePath) {
       location.assign(item.href);
@@ -315,7 +315,7 @@ export const createShell = (terminal: Terminal) => {
   const throwStone = () => {
     stoneThrown = true;
     const drums = line('');
-    setTimeout(() => (drums.textContent = 'Langt nede fra dypet: dum … dum … dum.'), 3000);
+    setTimeout(() => (drums.textContent = 'Trommer, trommer i dypet...'), 3000);
     return [line('Plopp.'), drums];
   };
 
